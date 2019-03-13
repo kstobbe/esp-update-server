@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h2>Platforms</h2>
+  <ul class=entries>
+    {% if platforms: %}
+      {% for key, value in platforms.items(): %}
+        <li><h3>{{ key.title() }}</h3>
+          <table>
+            <tr>
+              <td>Version</td>
+              <td>&nbsp:&nbsp</td>
+              <td>
+                {% if value['version']: %}
+                  {{ value['version'] }}
+                {% else %}
+                  None
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td>Uploaded</td>
+              <td>&nbsp:&nbsp</td>
+              <td>
+                {% if value['uploaded']: %}
+                  {{ value['uploaded'] }}
+                {% else %}
+                  None
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td>Downloads</td>
+              <td>&nbsp:&nbsp</td>
+              <td>
+                {% if value['downloads']: %}
+                  {{ value['downloads'] }}
+                {% else %}
+                  0
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td valign="top">Whitelist</td>
+              <td valign="top">&nbsp:&nbsp</td>
+              <td>
+                {% if value['whitelist']: %}
+                  {% for device in value['whitelist']: %}
+                    {{ format_mac(device.upper()) }}<br>
+                  {% endfor %}
+                {% else %}
+                  None
+                {% endif %}
+              </td>
+            </tr>
+          </table>
+      {% endfor %}
+    {% else %}
+      <li><em>No platforms created.</em>
+    {% endif %}
+  </ul>
+{% endblock %}

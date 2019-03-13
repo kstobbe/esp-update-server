@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h2>Manage Whitelists</h2>
+  <form name="add" action="{{ url_for('whitelist') }}" method=post class=add-entry >
+    <dl>
+      <dt>MAC Address:
+      <dd><input type=text size=30 name=macaddr>
+      <dt>Platform:
+      <dd><select name=device >
+          <option value="--">--</option>
+        {% if platforms.keys() %}
+          {% for name in platforms.keys() %}
+            <option value="{{ name }}">{{ name.title() }}</option>
+          {% endfor %}
+        {% endif %}
+      </select>
+      <dd><input type=submit name=action value=Add>
+    </dl>
+  </form>
+
+  <table>
+    <tr>
+      <th>Platform</th>
+      <th>MAC Address</th>
+      <th></th>
+    </tr>
+    {% for key, value in platforms.items(): %}
+      {% if value['whitelist']: %}
+        {% for mac in value['whitelist']: %}
+        <tr>
+          <td>{{ key.title() }}</td>
+          <td>{{ format_mac(mac.upper()) }}</td>
+          <td>
+            <form name="remove" action="{{ url_for('whitelist') }}" method=post class=add-entry >
+              <input type="hidden" value="{{ key }}" name="device" />
+              <input type="hidden" value="{{ mac }}" name="macaddr" />
+              <input type=submit name=action value=Remove>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  </table>
+
+{% endblock %}
+

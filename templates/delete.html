@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h2>Delete Platform</h2>
+  <form action="{{ url_for('delete') }}" method=post class=add-entry >
+    <dl>
+      <dt>Platform:
+      <dd><select name=name >
+          <option value="--">--</option>
+        {% if names %}
+          {% for name in names %}
+            <option value="{{ name }}">{{ name.title() }}</option>
+          {% endfor %}
+        {% endif %}
+      </select>
+      <dd><input type=submit value=Delete>
+    </dl>
+  </form>
+{% endblock %}
+

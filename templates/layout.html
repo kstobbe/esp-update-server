@@ -1,0 +1,24 @@
+<!doctype html>
+<head>
+  <title>ESP Update Server</title>
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class=page>
+    <h1>ESP Update Server</h1>
+    <div class=metanav>
+      <a href="{{ url_for('index') }}">Status</a>
+      <a href="{{ url_for('create') }}">Create</a>
+      <a href="{{ url_for('delete') }}">Delete</a>
+      <a href="{{ url_for('whitelist') }}">Whitelist</a>
+      <a href="{{ url_for('upload') }}">Upload</a>
+    </div>
+    {% for message in get_flashed_messages() %}
+      <div class=flash>{{ message }}</div>
+    {% endfor %}
+    {% block body %}{% endblock %}
+    <div class=metanav>
+      <a href="http://www.kstobbe.dk">K. Stobbe</a>
+    </div>
+  </div>
+</body>
