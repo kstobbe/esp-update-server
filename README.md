@@ -48,7 +48,7 @@ In a web browser, when the server is running, enter the IP address of the machin
 Devices requesting download of a binary file for upgrade must access path `update` and include _device name_ and current _version number_ in a query like below - substitute the IP address with your own.
 
 ```
-http://192.168.1.188:5000/update?ver=v1.0.2&dev=chase
+http://192.168.0.10:5000/update?ver=v1.0.2&dev=chase
 ```
 
 The server will respond with _HTTP Error Code_:
