@@ -68,7 +68,7 @@ Below if an implementation for _ESP32_ that works with the server. Remember to c
 const char* urlBase = "http://192.168.0.10:5000/update";
 
 /***************************************************/
-void suota_checkForUpdates(void)
+void checkForUpdates(void)
 {
   String checkUrl = String( urlBase);
   checkUrl.concat( "?ver=" + String(VERSION) );
