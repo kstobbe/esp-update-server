@@ -65,7 +65,7 @@ Below if an implementation for _ESP32_ that works with the server. Remember to c
 #include <HTTPUpdate.h>
 #include <WiFi.h>
 
-const char* urlBase = "http://192.168.1.188:5000/update";
+const char* urlBase = "http://192.168.0.10:5000/update";
 
 /***************************************************/
 void suota_checkForUpdates(void)
