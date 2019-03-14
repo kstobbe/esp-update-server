@@ -65,6 +65,9 @@ Below if an implementation for _ESP32_ that works with the server. Remember to c
 #include <HTTPUpdate.h>
 #include <WiFi.h>
 
+#define VERSION "v1.0.2"
+#define HOST "Chase"
+
 const char* urlBase = "http://192.168.0.10:5000/update";
 
 /***************************************************/
