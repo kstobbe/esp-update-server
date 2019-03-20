@@ -34,7 +34,7 @@ Ready-made Docker images are available on [Docker Hub](https://hub.docker.com/r/
 To run the server in a Docker container create a directory for storing binaries. Go inside this directory and execute the following command:
 
 ```
-docker run -d -v $PWD/bin:/esp-update-server/bin -p 5000:5000 kstobbe/esp-update-server:latest
+docker run -d -v $PWD:/esp-update-server/bin -p 5000:5000 kstobbe/esp-update-server:latest
 ```
 
 Using the `-v` option ensures files are stored outside the Docker container and are thus persisted even if the container is terminated.
