@@ -2,6 +2,7 @@ from datetime import datetime
 from flask import Flask, request, render_template, flash, redirect, url_for, send_from_directory
 from packaging import version
 import re
+import time
 import os
 import yaml
 
@@ -9,7 +10,7 @@ __author__ = 'Kristian Stobbe'
 __copyright__ = 'Copyright 2019, K. Stobbe'
 __credits__ = ['Kristian Stobbe']
 __license__ = 'MIT'
-__version__ = '1.0.3'
+__version__ = '1.1.0'
 __maintainer__ = 'Kristian Stobbe'
 __email__ = 'mail@kstobbe.dk'
 __status__ = 'Production'
@@ -19,6 +20,11 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = './bin'
 app.config['SECRET_KEY'] = 'Kri57i4n570bb33r3nF1ink3rFyr'
 PLATFORMS_YAML = app.config['UPLOAD_FOLDER'] + '/platforms.yml'
+
+
+def log_event(msg):
+    st = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    print(st + ' ' + msg)
 
 
 def allowed_ext(filename):
@@ -31,7 +37,7 @@ def load_yaml():
     try:
         with open(PLATFORMS_YAML, 'r') as stream:
             try:
-                platforms = yaml.load(stream)
+                platforms = yaml.load(stream, Loader=yaml.FullLoader)
             except yaml.YAMLError as err:
                 flash(err)
     except:
@@ -69,13 +75,17 @@ def update():
     if 'X_ESP8266_STA_MAC' in request.headers:
         __mac = request.headers['X_ESP8266_STA_MAC']
         __mac = str(re.sub(r'[^0-9A-fa-f]+', '', __mac.lower()))
-    if 'x_ESP32_STA_MAC' in request.headers:
+        log_event("INFO: Update called by ESP8266 with MAC " + __mac)
+    elif 'x_ESP32_STA_MAC' in request.headers:
         __mac = request.headers['x_ESP32_STA_MAC']
         __mac = str(re.sub(r'[^0-9A-fa-f]+', '', __mac.lower()))
+        log_event("INFO: Update called by ESP32 with MAC " + __mac)
     else:
         __mac = ''
+        log_event("WARN: Update called without known headers.")
     __ver = request.args.get('ver', default=None)
     if __dev and __mac and __ver:
+        log_event("INFO: Dev: " + __dev + "Ver: " + __ver)
         __dev = __dev.lower()
         if platforms:
             if __dev in platforms.keys():
@@ -88,13 +98,18 @@ def update():
                                                        as_attachment=True, mimetype='application/octet-stream',
                                                        attachment_filename=platforms[__dev]['file'])
                     else:
+                        log_event("INFO: No update needed.")
                         return 'No update needed.', 304
                 else:
+                    log_event("ERROR: Device not whitelisted.")
                     return 'Error: Device not whitelisted.', 400
             else:
+                log_event("ERROR: Unknown platform.")
                 return 'Error: Unknown platform.', 400
         else:
+            log_event("ERROR: Create platforms before updating.")
             return 'Error: Create platforms before updating.', 500
+    log_event("ERROR: Invalid parameters.")
     return 'Error: Invalid parameters.', 400
 
 
