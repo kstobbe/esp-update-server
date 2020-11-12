@@ -85,7 +85,7 @@ void checkForUpdates(void)
   switch (ret) {
     default:
     case HTTP_UPDATE_FAILED:
-      Serial.println("ERROR: HTTP_UPDATE_FAILD Error (" + String(ESPhttpUpdate.getLastError()) + "): " + ESPhttpUpdate.getLastErrorString().c_str());
+      Serial.println("ERROR: HTTP_UPDATE_FAILD Error (" + String(httpUpdate.getLastError()) + "): " + httpUpdate.getLastErrorString().c_str());
       break;
     case HTTP_UPDATE_NO_UPDATES:
       Serial.println("INFO: HTTP_UPDATE_NO_UPDATES");
