@@ -68,12 +68,12 @@ Below if an implementation for _ESP32_ that works with the server. Remember to c
 #define VERSION "v1.0.2"
 #define HOST "Chase"
 
-const char* urlBase = "http://192.168.0.10:5000/update";
+const char* urlBase = "http://192.168.0.10:5000/";
 
 /***************************************************/
 void checkForUpdates(void)
 {
-  String checkUrl = String( urlBase);
+  String checkUrl = String( ota_update_server) + String("update?ver=" VERSION "&dev=" HOST);
   checkUrl.concat( "?ver=" + String(VERSION) );
   checkUrl.concat( "&dev=" + String(HOST) );
 
@@ -114,9 +114,7 @@ const char* urlBase = "http://192.168.0.10:5000/update";
 /***************************************************/
 void checkForUpdates(void)
 {
-  String checkUrl = String( urlBase);
-  checkUrl.concat( "?ver=" + String(VERSION) );
-  checkUrl.concat( "&dev=" + String(HOST) );
+  String checkUrl = String( ota_update_server) + String("update?ver=" VERSION "&dev=" HOST ");
 
   Serial.println("INFO: Checking for updates at URL: " + String( checkUrl ) );
   

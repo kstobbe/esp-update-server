@@ -127,37 +127,36 @@ def upload():
         if file and allowed_ext(file.filename):
             data = file.read()
             for __dev in platforms.keys():
-                if re.search(__dev.encode('UTF-8'), data, re.IGNORECASE):
-                    m = re.search(b'v\d+\.\d+\.\d+', data)
-                    if m:
-                        __ver = m.group()[1:].decode('utf-8')
-                        if (platforms[__dev]['version'] is None) or (platforms[__dev]['version'] and version.parse(platforms[__dev]['version']) < version.parse(__ver)):
-                            old_file = platforms[__dev]['file']
-                            filename = __dev + '_' + __ver.replace('.', '_') + '.bin'
-                            platforms[__dev]['version'] = __ver
-                            platforms[__dev]['downloads'] = 0
-                            platforms[__dev]['file'] = filename
-                            platforms[__dev]['uploaded'] = datetime.now().strftime('%Y-%m-%d')
-                            file.seek(0)
-                            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                            file.close()
-                            if save_yaml(platforms):
-                                # Only delete old file after YAML file is updated.
-                                if old_file:
-                                    try:
-                                        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], old_file))
-                                    except:
-                                        flash('Error: Removing old file failed.')
-                                flash('Success: File uploaded.')
-                            else:
-                                flash('Error: Could not save file.')
-                            return redirect(url_for('index'))
+                m = re.search(b"update\?dev=" + __dev.encode('UTF-8') + b"&ver=(v\d+\.\d+\.\d+)\x00", data, re.IGNORECASE)
+                if m:
+                    __ver = m.groups()[0][1:].decode('utf-8')
+                    if (platforms[__dev]['version'] is None) or (platforms[__dev]['version'] and version.parse(platforms[__dev]['version']) < version.parse(__ver)):
+                        old_file = platforms[__dev]['file']
+                        filename = __dev + '_' + __ver.replace('.', '_') + '.bin'
+                        platforms[__dev]['version'] = __ver
+                        platforms[__dev]['downloads'] = 0
+                        platforms[__dev]['file'] = filename
+                        platforms[__dev]['uploaded'] = datetime.now().strftime('%Y-%m-%d')
+                        file.seek(0)
+                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                        file.close()
+                        if save_yaml(platforms):
+                            # Only delete old file after YAML file is updated.
+                            if old_file:
+                                try:
+                                    os.remove(os.path.join(app.config['UPLOAD_FOLDER'], old_file))
+                                except:
+                                    flash('Error: Removing old file failed.')
+                            flash('Success: File uploaded.')
                         else:
-                            flash('Error: Version must increase. File not uploaded.')
-                            return redirect(request.url)
+                            flash('Error: Could not save file.')
+                        return redirect(url_for('index'))
                     else:
-                        flash('Error: No version found in file. File not uploaded.')
+                        flash('Error: Version must increase. File not uploaded.')
                         return redirect(request.url)
+                else:
+                    flash('Error: No version found in file. File not uploaded.')
+                    return redirect(request.url)
             flash('Error: No known platform name found in file. File not uploaded.')
             return redirect(request.url)
         else:
