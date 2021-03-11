@@ -74,8 +74,6 @@ const char* urlBase = "http://192.168.0.10:5000/";
 void checkForUpdates(void)
 {
   String checkUrl = String( ota_update_server) + String("update?ver=" VERSION "&dev=" HOST);
-  checkUrl.concat( "?ver=" + String(VERSION) );
-  checkUrl.concat( "&dev=" + String(HOST) );
 
   Serial.println("INFO: Checking for updates at URL: " + String( checkUrl ) );
 
