@@ -1,10 +1,12 @@
-from datetime import datetime
-from flask import Flask, request, render_template, flash, redirect, url_for, send_from_directory
-from packaging import version
+import os
 import re
 import time
-import os
+from datetime import datetime
+
 import yaml
+from flask import (Flask, flash, redirect, render_template, request,
+                   send_from_directory, url_for)
+from packaging import version
 
 __author__ = 'Kristian Stobbe'
 __copyright__ = 'Copyright 2019, K. Stobbe'
@@ -20,6 +22,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = './bin'
 app.config['SECRET_KEY'] = 'Kri57i4n570bb33r3nF1ink3rFyr'
 PLATFORMS_YAML = app.config['UPLOAD_FOLDER'] + '/platforms.yml'
+MACS_YAML = app.config['UPLOAD_FOLDER'] + '/macs.yml'
 
 
 def log_event(msg):
@@ -60,6 +63,37 @@ def save_yaml(platforms):
     return False
 
 
+def load_known_mac_yaml():
+    macs = None
+    try:
+        with open(MACS_YAML, 'r') as stream:
+            try:
+                macs = yaml.load(stream, Loader=yaml.FullLoader)
+            except yaml.YAMLError as err:
+                flash(err)
+    except:
+        flash('Error: File not found.')
+    if macs:
+        for known_mac in macs.values():
+            if known_mac['first_seen']:
+                known_mac['first_seen'] = str(known_mac['first_seen'])
+            if known_mac['last_seen']:
+                known_mac['last_seen'] = str(known_mac['last_seen'])
+    if not macs:
+        macs = dict()
+    return macs
+
+
+def save_known_mac_yaml(macs):
+    try:
+        with open(MACS_YAML, 'w') as outfile:
+            yaml.dump(macs, outfile, default_flow_style=False)
+            return True
+    except:
+        flash('Error: Known MAC data not saved.')
+    return False
+
+
 @app.context_processor
 def utility_processor():
     def format_mac(mac):
@@ -71,6 +105,7 @@ def utility_processor():
 def update():
     __error = 400
     platforms = load_yaml()
+    known_macs = load_known_mac_yaml()
     __dev = request.args.get('dev', default=None)
     if 'X_ESP8266_STA_MAC' in request.headers:
         __mac = request.headers['X_ESP8266_STA_MAC']
@@ -85,6 +120,15 @@ def update():
         log_event("WARN: Update called without known headers.")
     __ver = request.args.get('ver', default=None)
     if __dev and __mac and __ver:
+        # If we know this device already
+        if __mac in known_macs.keys():
+            known_macs[__mac]['last_seen'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            known_macs[__mac] = {'first_seen': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                           'last_seen': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                           'IP': None,
+                           'type': None}
+        save_known_mac_yaml(known_macs)
         log_event("INFO: Dev: " + __dev + "Ver: " + __ver)
         __dev = __dev.lower()
         if platforms:
