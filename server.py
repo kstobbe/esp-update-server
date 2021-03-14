@@ -270,6 +270,7 @@ def delete():
 @app.route('/whitelist', methods=['GET', 'POST'])
 def whitelist():
     platforms = load_yaml()
+    known_macs = load_known_mac_yaml()
     if platforms and request.method == 'POST':
         if 'Add' in request.form['action']:
             # Ensure valid data.
@@ -305,7 +306,7 @@ def whitelist():
             flash('Error: Unknown action.')
 
     if platforms:
-        return render_template('whitelist.html', platforms=platforms)
+        return render_template('whitelist.html', platforms=platforms, known_macs = known_macs)
     else:
         return render_template('status.html', platforms=platforms)
 
