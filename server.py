@@ -7,6 +7,8 @@ import yaml
 from flask import (Flask, flash, redirect, render_template, request,
                    send_from_directory, url_for)
 from packaging import version
+from flask_httpauth import HTTPBasicAuth
+from werkzeug.security import generate_password_hash, check_password_hash
 
 __author__ = 'Kristian Stobbe'
 __copyright__ = 'Copyright 2019, K. Stobbe'
@@ -23,7 +25,18 @@ app.config['UPLOAD_FOLDER'] = './bin'
 app.config['SECRET_KEY'] = 'Kri57i4n570bb33r3nF1ink3rFyr'
 PLATFORMS_YAML = app.config['UPLOAD_FOLDER'] + '/platforms.yml'
 MACS_YAML = app.config['UPLOAD_FOLDER'] + '/macs.yml'
+USERS_YAML = app.config['UPLOAD_FOLDER'] + '/users.yml'
 
+
+auth = HTTPBasicAuth()
+
+users = {}
+
+@auth.verify_password
+def verify_password(username, password):
+    if username in users and \
+            check_password_hash(users.get(username), password):
+        return username
 
 def log_event(msg):
     st = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
@@ -51,6 +64,24 @@ def load_yaml():
                 for i in range(0, len(value['whitelist'])):
                     value['whitelist'][i] = str(value['whitelist'][i])
     return platforms
+
+def load_users():
+    users = None
+    try:
+        with open(USERS_YAML, 'r') as stream:
+            try:
+                users = yaml.load(stream, Loader=yaml.FullLoader)
+            except yaml.YAMLError as err:
+                flash(err)
+    except:
+        flash('Error: Users file not found.')
+    if users:
+        for user in users: # generate hash from the plaintext password
+            users[user] = generate_password_hash(users[user])
+    if not users:
+        users = dict()
+    print(users)
+    return users
 
 
 def save_yaml(platforms):
@@ -159,8 +190,8 @@ def update():
     log_event("ERROR: Invalid parameters.")
     return 'Error: Invalid parameters.', 400
 
-
 @app.route('/upload', methods=['GET', 'POST'])
+@auth.login_required
 def upload():
     platforms = load_yaml()
     if platforms and request.method == 'POST':
@@ -216,6 +247,7 @@ def upload():
 
 
 @app.route('/create', methods=['GET', 'POST'])
+@auth.login_required
 def create():
     if request.method == 'POST':
         if not request.form['name']:
@@ -239,6 +271,7 @@ def create():
 
 
 @app.route('/delete', methods=['GET', 'POST'])
+@auth.login_required
 def delete():
     if request.method == 'POST':
         if not request.form['name']:
@@ -268,6 +301,7 @@ def delete():
 
 
 @app.route('/whitelist', methods=['GET', 'POST'])
+@auth.login_required
 def whitelist():
     platforms = load_yaml()
     known_macs = load_known_mac_yaml()
@@ -310,12 +344,13 @@ def whitelist():
     else:
         return render_template('status.html', platforms=platforms)
 
-
 @app.route('/')
+@auth.login_required
 def index():
     platforms = load_yaml()
     return render_template('status.html', platforms=platforms)
 
 
 if __name__ == '__main__':
+    users = load_users()
     app.run(host='0.0.0.0', port=int('5000'), debug=False)
