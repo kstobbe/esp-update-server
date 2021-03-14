@@ -48,7 +48,7 @@ In a web browser, when the server is running, enter the IP address of the machin
 Devices requesting download of a binary file for upgrade must access path `update` and include _device name_ and current _version number_ in a query like below - substitute the IP address with your own.
 
 ```
-http://192.168.0.10:5000/update?ver=v1.0.2&dev=chase
+http://192.168.0.10:5000/update?dev=chase&ver=v1.0.2
 ```
 
 The server will respond with _HTTP Error Code_:
@@ -65,15 +65,15 @@ Below if an implementation for _ESP32_ that works with the server. Remember to c
 #include <HTTPUpdate.h>
 #include <WiFi.h>
 
-#define VERSION "v1.0.2"
-#define HOST "Chase"
+#define VERSION "v1.0.2
+#define DEVICE_PLATFORM "Chase"
 
-const char* urlBase = "http://192.168.0.10:5000/";
+const char* ota_update_server = "http://192.168.0.10:5000/";
 
 /***************************************************/
 void checkForUpdates(void)
 {
-  String checkUrl = String( ota_update_server) + String("update?ver=" VERSION "&dev=" HOST);
+  String checkUrl = String( ota_update_server) + String("update?dev=" DEVICE_PLATFORM "&ver=" VERSION );
 
   Serial.println("INFO: Checking for updates at URL: " + String( checkUrl ) );
 
@@ -104,15 +104,15 @@ For _ESP8266_ the implementation is very similar with a few changes. Remember to
 #include <ESP8266httpUpdate.h>
 #include <ESP8266WiFi.h>
 
-#define VERSION "v1.0.2"
-#define HOST "Chase"
+#define VERSION "v1.0.2
+#define DEVICE_PLATFORM "Chase"
 
-const char* urlBase = "http://192.168.0.10:5000/update";
+const char* ota_update_server = "http://192.168.0.10:5000/";
 
 /***************************************************/
 void checkForUpdates(void)
 {
-  String checkUrl = String( ota_update_server) + String("update?ver=" VERSION "&dev=" HOST ");
+  String checkUrl = String( ota_update_server) + String("update?dev=" DEVICE_PLATFORM "&ver=" VERSION );
 
   Serial.println("INFO: Checking for updates at URL: " + String( checkUrl ) );
   
