@@ -90,6 +90,9 @@ def update():
         if platforms:
             if __dev in platforms.keys():
                 if __mac in platforms[__dev]['whitelist']:
+                    if not platforms[__dev]['version']:
+                        log_event("ERROR: No update available.")
+                        return 'No update available.', 400
                     if version.parse(__ver) < version.parse(platforms[__dev]['version']):
                         if os.path.isfile(app.config['UPLOAD_FOLDER'] + '/' + platforms[__dev]['file']):
                             platforms[__dev]['downloads'] += 1
