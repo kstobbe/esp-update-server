@@ -43,5 +43,24 @@
     {% endfor %}
   </table>
 
+<hr> <br>
+  <table class=maclist>
+    <tr>
+      <th>MAC Address</th>
+      <th>First seen</th>
+      <th>Last seen</th>
+      <th></th>
+    </tr>
+    {% for key, value in known_macs.items(): %}
+      {% if value['first_seen']: %}
+        <tr>
+          <td>{{ format_mac(key.upper()) }}</td>
+          <td>{{ value['first_seen'] }}</td>
+          <td>{{ value['last_seen'] }}</td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+  </table>
+
 {% endblock %}
 
