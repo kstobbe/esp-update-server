@@ -41,11 +41,12 @@ Using the `-v` option ensures files are stored outside the Docker container and 
 
 ### Access Server For Management
 
-In a web browser, when the server is running, enter the IP address of the machine running the server and port 5000, e.g. `http://192.168.0.10:5000`. Now platforms can be created and deleted. Whitelists can be managed and binaries uploaded.
+In a web browser, when the server is running, enter the IP address of the machine running the server and port 5000, e.g. `http://192.168.0.10:5000`. Now platforms can be created and deleted. Whitelists can be managed and binaries uploaded.  
+**Status overview**  
 ![alt text](img/status.png "Status overview")  
-Status overview  
+**Whitelisting devices, and assigning them to a platform**  
 ![alt text](img/whitelist.png "Whitelist page")  
-Whitelisting devices, and assigning them to a platform
+
 ### Access Server For Update
 
 Devices requesting download of a binary file for upgrade must access path `update` and include _device name_ and current _version number_ in a query like below - substitute the IP address with your own.
