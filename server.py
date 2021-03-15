@@ -225,18 +225,20 @@ def upload():
                                     os.remove(os.path.join(app.config['UPLOAD_FOLDER'], old_file))
                                 except:
                                     flash('Error: Removing old file failed.')
-                            flash('Success: File uploaded.')
+                            flash('Success: File uploaded for platform {} with version {}.'.format(__dev, __ver))
                         else:
                             flash('Error: Could not save file.')
                         return redirect(url_for('index'))
                     else:
                         flash('Error: Version must increase. File not uploaded.')
                         return redirect(request.url)
-                else:
-                    flash('Error: No version found in file. File not uploaded.')
-                    return redirect(request.url)
-            flash('Error: No known platform name found in file. File not uploaded.')
-            return redirect(request.url)
+            m = re.search(b"update\?dev=" + __dev.encode('UTF-8')+ b"&ver=$", data, re.IGNORECASE)
+            if m: # a platform was found, meaning no version was found
+                flash('Error: No version found in file. File not uploaded.')
+                return redirect(request.url)
+            else:
+                flash('Error: No known platform name found in file. File not uploaded.')
+                return redirect(request.url)
         else:
             flash('Error: File type not allowed.')
             return redirect(request.url)
