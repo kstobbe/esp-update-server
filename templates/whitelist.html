@@ -46,6 +46,7 @@
 <hr> <br>
   <table class=maclist>
     <tr>
+      <th></th>
       <th>MAC Address</th>
       <th>First seen</th>
       <th>Last seen</th>
@@ -54,7 +55,8 @@
     {% for key, value in known_macs.items(): %}
       {% if value['first_seen']: %}
         <tr>
-          <td>{{ format_mac(key.upper()) }}</td>
+          <td> {{ '✔️' if value['platform'] else '❓' }}</td></td>
+          <td>{{ format_mac(key.upper()) }} </td>
           <td>{{ moment(value['first_seen_dt']).format('DD-MM-YYYY HH:mm') }}</td>
           <td>{{  moment(value['last_seen_dt']).format('DD-MM-YYYY HH:mm') }} ({{ moment(value['last_seen_dt']).fromNow()}})</td>
         </tr>

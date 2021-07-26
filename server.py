@@ -129,6 +129,13 @@ def save_known_mac_yaml(macs):
         flash('Error: Known MAC data not saved.')
     return False
 
+def detect_known_macs(known_macs, platforms):
+    for key, known_mac in known_macs.items():
+        for platform, platform_values in platforms.items():
+            if(platform_values['whitelist'] and key in platform_values['whitelist']):
+                # This mac is whitelisted, store the platform-name, so we can use that in the future
+                known_mac['platform'] = platform 
+    return known_macs
 
 @app.context_processor
 def utility_processor():
@@ -345,9 +352,9 @@ def whitelist():
                 flash('Error: Could not save file.')
         else:
             flash('Error: Unknown action.')
-
     if platforms:
-        return render_template('whitelist.html', platforms=platforms, known_macs = known_macs)
+        known_macs_with_platform =  detect_known_macs(known_macs, platforms)
+        return render_template('whitelist.html', platforms=platforms, known_macs = known_macs_with_platform)
     else:
         return render_template('status.html', platforms=platforms)
 
