@@ -2,10 +2,12 @@ import os
 import re
 import time
 from datetime import datetime
+from collections import OrderedDict
 
 import yaml
 from flask import (Flask, flash, redirect, render_template, request,
                    send_from_directory, url_for)
+from flask_moment import Moment
 from packaging import version
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -21,6 +23,7 @@ __status__ = 'Production'
 
 ALLOWED_EXTENSIONS = set(['bin'])
 app = Flask(__name__)
+moment = Moment(app)
 app.config['UPLOAD_FOLDER'] = './bin'
 app.config['SECRET_KEY'] = 'Kri57i4n570bb33r3nF1ink3rFyr'
 PLATFORMS_YAML = app.config['UPLOAD_FOLDER'] + '/platforms.yml'
@@ -108,8 +111,10 @@ def load_known_mac_yaml():
         for known_mac in macs.values():
             if known_mac['first_seen']:
                 known_mac['first_seen'] = str(known_mac['first_seen'])
+                known_mac['first_seen_dt'] = datetime.strptime(known_mac['first_seen'], '%Y-%m-%d %H:%M:%S')
             if known_mac['last_seen']:
                 known_mac['last_seen'] = str(known_mac['last_seen'])
+                known_mac['last_seen_dt'] = datetime.strptime(known_mac['last_seen'], '%Y-%m-%d %H:%M:%S')
     if not macs:
         macs = dict()
     return macs

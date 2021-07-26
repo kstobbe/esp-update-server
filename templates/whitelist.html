@@ -55,8 +55,8 @@
       {% if value['first_seen']: %}
         <tr>
           <td>{{ format_mac(key.upper()) }}</td>
-          <td>{{ value['first_seen'] }}</td>
-          <td>{{ value['last_seen'] }}</td>
+          <td>{{ moment(value['first_seen_dt']).format('DD-MM-YYYY HH:mm') }}</td>
+          <td>{{  moment(value['last_seen_dt']).format('DD-MM-YYYY HH:mm') }} ({{ moment(value['last_seen_dt']).fromNow()}})</td>
         </tr>
       {% endif %}
     {% endfor %}
