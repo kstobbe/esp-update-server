@@ -27,6 +27,13 @@ To run the server directly from code start it with the following command:
 python3 server.py
 ```
 
+### Build docker file yourself
+From the root-directory of this app, run: `docker build -t esp-update-server:latest . ` to re-build the docker-image from source
+To directly run this app, run
+```
+docker run -d --restart unless-stopped --name esp-update-server -v $PWD/bin:/esp-update-server/bin -p 5000:5000 esp-update-server:latest
+```
+
 ### Start Server From Docker?
 
 Ready-made Docker images are available on [Docker Hub](https://hub.docker.com/r/kstobbe/esp-update-server/) which support running on Linux on both AMD64 and ARM32V6 architectures - i.e. desktops, laptops, and Raspberry Pis.
