@@ -11,6 +11,9 @@ from flask_moment import Moment
 from packaging import version
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
+import sentry_sdk
+from flask import Flask
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 __author__ = 'Kristian Stobbe'
 __copyright__ = 'Copyright 2019, K. Stobbe'
@@ -34,6 +37,20 @@ USERS_YAML = app.config['UPLOAD_FOLDER'] + '/users.yml'
 auth = HTTPBasicAuth()
 
 users = {}
+
+sentry_sdk.init(
+    dsn="https://ccfebfa76dc645acbc16566836763e5b@o231748.ingest.sentry.io/6118097",
+    integrations=[FlaskIntegration()],
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0
+)
+
+@app.route('/debug-sentry')
+def trigger_error():
+    division_by_zero = 1 / 0
 
 @auth.verify_password
 def verify_password(username, password):
@@ -146,61 +163,64 @@ def utility_processor():
 
 @app.route('/update', methods=['GET', 'POST'])
 def update():
-    __error = 400
-    platforms = load_yaml()
-    known_macs = load_known_mac_yaml()
-    __dev = request.args.get('dev', default=None)
-    if 'X_ESP8266_STA_MAC' in request.headers:
-        __mac = request.headers['X_ESP8266_STA_MAC']
-        __mac = str(re.sub(r'[^0-9A-fa-f]+', '', __mac.lower()))
-        log_event("INFO: Update called by ESP8266 with MAC " + __mac)
-    elif 'x_ESP32_STA_MAC' in request.headers:
-        __mac = request.headers['x_ESP32_STA_MAC']
-        __mac = str(re.sub(r'[^0-9A-fa-f]+', '', __mac.lower()))
-        log_event("INFO: Update called by ESP32 with MAC " + __mac)
-    else:
-        __mac = ''
-        log_event("WARN: Update called without known headers.")
-    __ver = request.args.get('ver', default=None)
-    if __dev and __mac and __ver:
-        # If we know this device already
-        if __mac in known_macs.keys():
-            known_macs[__mac]['last_seen'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    try:
+        __error = 400
+        platforms = load_yaml()
+        known_macs = load_known_mac_yaml()
+        __dev = request.args.get('dev', default=None)
+        if 'X_ESP8266_STA_MAC' in request.headers:
+            __mac = request.headers['X_ESP8266_STA_MAC']
+            __mac = str(re.sub(r'[^0-9A-fa-f]+', '', __mac.lower()))
+            log_event("INFO: Update called by ESP8266 with MAC " + __mac)
+        elif 'x_ESP32_STA_MAC' in request.headers:
+            __mac = request.headers['x_ESP32_STA_MAC']
+            __mac = str(re.sub(r'[^0-9A-fa-f]+', '', __mac.lower()))
+            log_event("INFO: Update called by ESP32 with MAC " + __mac)
         else:
-            known_macs[__mac] = {'first_seen': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                           'last_seen': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                           'IP': None,
-                           'type': None}
-        save_known_mac_yaml(known_macs)
-        log_event("INFO: Dev: " + __dev + "Ver: " + __ver)
-        __dev = __dev.lower()
-        if platforms:
-            if __dev in platforms.keys():
-                if __mac in platforms[__dev]['whitelist']:
-                    if not platforms[__dev]['version']:
-                        log_event("ERROR: No update available.")
-                        return 'No update available.', 400
-                    if version.parse(__ver) < version.parse(platforms[__dev]['version']):
-                        if os.path.isfile(app.config['UPLOAD_FOLDER'] + '/' + platforms[__dev]['file']):
-                            platforms[__dev]['downloads'] += 1
-                            save_yaml(platforms)
-                            return send_from_directory(directory=app.config['UPLOAD_FOLDER'], filename=platforms[__dev]['file'],
-                                                       as_attachment=True, mimetype='application/octet-stream',
-                                                       attachment_filename=platforms[__dev]['file'])
-                    else:
-                        log_event("INFO: No update needed.")
-                        return 'No update needed.', 304
-                else:
-                    log_event("ERROR: Device not whitelisted.")
-                    return 'Error: Device not whitelisted.', 400
+            __mac = ''
+            log_event("WARN: Update called without known headers.")
+        __ver = request.args.get('ver', default=None)
+        if __dev and __mac and __ver:
+            # If we know this device already
+            if __mac in known_macs.keys():
+                known_macs[__mac]['last_seen'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             else:
-                log_event("ERROR: Unknown platform.")
-                return 'Error: Unknown platform.', 400
-        else:
-            log_event("ERROR: Create platforms before updating.")
-            return 'Error: Create platforms before updating.', 500
-    log_event("ERROR: Invalid parameters.")
-    return 'Error: Invalid parameters.', 400
+                known_macs[__mac] = {'first_seen': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                            'last_seen': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                            'IP': None,
+                            'type': None}
+            save_known_mac_yaml(known_macs)
+            log_event("INFO: Dev: " + __dev + "Ver: " + __ver)
+            __dev = __dev.lower()
+            if platforms:
+                if __dev in platforms.keys():
+                    if __mac in platforms[__dev]['whitelist']:
+                        if not platforms[__dev]['version']:
+                            log_event("ERROR: No update available.")
+                            return 'No update available.', 400
+                        if version.parse(__ver) < version.parse(platforms[__dev]['version']):
+                            if os.path.isfile(app.config['UPLOAD_FOLDER'] + '/' + platforms[__dev]['file']):
+                                platforms[__dev]['downloads'] += 1
+                                save_yaml(platforms)
+                                return send_from_directory(directory=app.config['UPLOAD_FOLDER'], filename=platforms[__dev]['file'],
+                                                        as_attachment=True, mimetype='application/octet-stream',
+                                                        attachment_filename=platforms[__dev]['file'])
+                        else:
+                            log_event("INFO: No update needed.")
+                            return 'No update needed.', 304
+                    else:
+                        log_event("ERROR: Device not whitelisted.")
+                        return 'Error: Device not whitelisted.', 400
+                else:
+                    log_event("ERROR: Unknown platform.")
+                    return 'Error: Unknown platform.', 400
+            else:
+                log_event("ERROR: Create platforms before updating.")
+                return 'Error: Create platforms before updating.', 500
+        log_event("ERROR: Invalid parameters.")
+        return 'Error: Invalid parameters.', 400
+    except Exception as e:
+        print(e) 
 
 @app.route('/upload', methods=['GET', 'POST'])
 @auth.login_required
