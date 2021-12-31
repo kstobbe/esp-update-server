@@ -2,18 +2,16 @@ import os
 import re
 import time
 from datetime import datetime
-from collections import OrderedDict
 
+import sentry_sdk
 import yaml
 from flask import (Flask, flash, redirect, render_template, request,
                    send_from_directory, url_for)
+from flask_httpauth import HTTPBasicAuth
 from flask_moment import Moment
 from packaging import version
-from flask_httpauth import HTTPBasicAuth
-from werkzeug.security import generate_password_hash, check_password_hash
-import sentry_sdk
-from flask import Flask
 from sentry_sdk.integrations.flask import FlaskIntegration
+from werkzeug.security import check_password_hash, generate_password_hash
 
 __author__ = 'Kristian Stobbe'
 __copyright__ = 'Copyright 2019, K. Stobbe'
