@@ -31,6 +31,8 @@
                 <td>{{ format_mac(device.mac.upper()) }}</td>
                 <td>{{device.version}}</td>
                 <td>{{device.IP}}</td>
+                <!-- <td>{{ moment(device.first_seen).format('DD-MM-YYYY HH:mm') }}</td>
+                <td>{{  moment(device.last_seen).format('DD-MM-YYYY HH:mm') }} ({{ moment(device.last_seen).fromNow()}})</td> -->
                 <td>{{device.first_seen}}</td>
                 <td>{{device.last_seen}}</td>
               </tr>
