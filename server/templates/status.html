@@ -1,61 +1,115 @@
+<!-- templates/status.html -->
+
 {% extends "layout.html" %}
-{% block body %}
-  <h2>Platforms</h2>
-  <ul class=entries>
-    {% if platforms: %}
-      {% for key, value in platforms.items(): %}
-        <li><h3>{{ key.title() }}</h3>
-          <table>
-            <tr>
-              <td>Version</td>
-              <td>&nbsp:&nbsp</td>
-              <td>
-                {% if value['version']: %}
-                  {{ value['version'] }}
-                {% else %}
-                  None
-                {% endif %}
-              </td>
-            </tr>
-            <tr>
-              <td>Uploaded</td>
-              <td>&nbsp:&nbsp</td>
-              <td>
-                {% if value['uploaded']: %}
-                  {{ value['uploaded'] }}
-                {% else %}
-                  None
-                {% endif %}
-              </td>
-            </tr>
-            <tr>
-              <td>Downloads</td>
-              <td>&nbsp:&nbsp</td>
-              <td>
-                {% if value['downloads']: %}
-                  {{ value['downloads'] }}
-                {% else %}
-                  0
-                {% endif %}
-              </td>
-            </tr>
-            <tr>
-              <td valign="top">Whitelist</td>
-              <td valign="top">&nbsp:&nbsp</td>
-              <td>
-                {% if value['whitelist']: %}
-                  {% for device in value['whitelist']: %}
-                    {{ format_mac(device.upper()) }}<br>
-                  {% endfor %}
-                {% else %}
-                  None
-                {% endif %}
-              </td>
-            </tr>
-          </table>
-      {% endfor %}
+
+{% block content %}
+<h1 class="title">
+  Status
+</h1>
+<h2 class="subtitle">
+  Easy system to manage OTA updates for Espressif-based devices
+</h2>
+{% with platforms = platforms %}
+    {% if platforms %}
+        {% for platform in platforms %}
+            {{ platform.name }}: {{platform.notes}}
+            {% if platform.devices %}
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>MAC</th>
+                  <th><abbr title="Last-known version. Will only be updated after an updated device connects to the OTA server again, since we can't know if an update was successfull">Version</abbr></th>
+                  <th>IP</th>
+                  <th>First seen</th>
+                  <th>Last seen</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for device in platform.devices %}
+              <tr>
+                <td>{{ format_mac(device.mac.upper()) }}</td>
+                <td>{{device.version}}</td>
+                <td>{{device.IP}}</td>
+                <td>{{device.first_seen}}</td>
+                <td>{{device.last_seen}}</td>
+              </tr>
+                
+              {% endfor %}
+            </tbody>
+            </table>
+            {% else %}
+            <div class="notification is-danger">
+              No devices for platform {{ platform.name }}
+            </div>
+            {% endif %}
+        {% endfor %}
     {% else %}
       <li><em>No platforms created.</em>
     {% endif %}
-  </ul>
+{% endwith %}
+
 {% endblock %}
+
+  <!-- 
+  {% block body %}
+  <h2>Platforms</h2>
+  <ul class=entries>
+    {% if platforms: %}
+    {% for key, value in platforms.items(): %}
+    <li>
+      <h3>{{ key.title() }}</h3>
+      <table>
+        <tr>
+          <td>Version</td>
+          <td>&nbsp:&nbsp</td>
+          <td>
+            {% if value['version']: %}
+            {{ value['version'] }}
+            {% else %}
+            None
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Uploaded</td>
+          <td>&nbsp:&nbsp</td>
+          <td>
+            {% if value['uploaded']: %}
+            {{ value['uploaded'] }}
+            {% else %}
+            None
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Downloads</td>
+          <td>&nbsp:&nbsp</td>
+          <td>
+            {% if value['downloads']: %}
+            {{ value['downloads'] }}
+            {% else %}
+            0
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td valign="top">Whitelist</td>
+          <td valign="top">&nbsp:&nbsp</td>
+          <td>
+            {% if value['whitelist']: %}
+            {% for device in value['whitelist']: %}
+            {{ format_mac(device.upper()) }}<br>
+            {% endfor %}
+            {% else %}
+            None
+            {% endif %}
+          </td>
+        </tr>
+      </table>
+      {% endfor %}
+      {% else %}
+    <li><em>No platforms created.</em>
+      {% endif %}
+  </ul>
+  {% endblock %} -->

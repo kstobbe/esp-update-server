@@ -4,8 +4,16 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_required, current_user
 from .models import User, Platform, Device
 from . import db
+from datetime import datetime
+import time
+import re
+
 
 main = Blueprint('main', __name__)
+
+def log_event(msg):
+    st = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    print(st + ' ' + msg)
 
 @main.route('/')
 def index():
@@ -33,7 +41,6 @@ def create_post():
         flash("No platform name entered")
         return redirect(url_for('main.create'))
     
-    
     platform = Platform.query.filter_by(name=platform_name).first() # if this returns a user, then the email already exists in database
     if platform:
         flash('Platform already exists')
@@ -46,3 +53,81 @@ def create_post():
     db.session.add(new_platform)
     db.session.commit()
     return redirect(url_for('main.index'))
+
+
+@main.context_processor
+def utility_processor():
+    def format_mac(mac):
+        return ':'.join(mac[i:i+2] for i in range(0,12,2))
+    return dict(format_mac=format_mac)
+
+@main.route('/status')
+@login_required
+def status():
+    platforms = Platform.query.all()
+    return render_template('status.html', platforms=platforms)
+
+
+
+@main.route('/update', methods=['GET'])
+def update():
+
+    __error = 400
+    
+    __dev = request.args.get('dev', default=None) # get requested device version
+    if 'X_ESP8266_STA_MAC' in request.headers:
+        __mac = request.headers['X_ESP8266_STA_MAC']
+        __mac = str(re.sub(r'[^0-9A-fa-f]+', '', __mac.lower()))
+        log_event("INFO: Update called by ESP8266 with MAC " + __mac)
+    elif 'x_ESP32_STA_MAC' in request.headers:
+        __mac = request.headers['x_ESP32_STA_MAC']
+        __mac = str(re.sub(r'[^0-9A-fa-f]+', '', __mac.lower()))
+        log_event("INFO: Update called by ESP32 with MAC " + __mac)
+    else:
+        __mac = ''
+        log_event("WARN: Update called without known headers.")
+    __ver = request.args.get('ver', default=None)
+    if __dev and __mac and __ver:
+        # If we know this device already
+        device = Device.query.filter_by(mac=__mac).first()
+        if device:
+            device.last_seen = datetime.utcnow()
+        else:
+            device = Device(mac=__mac)
+            # add the new device to the database
+            db.session.add(device)
+        db.session.commit()
+ 
+        log_event("INFO: Device type: " + __dev + "Ver: " + __ver)
+        __dev = __dev.lower()
+        # platform = Platform.query.join(Device).filter(Device.mac).first()
+        platform = Platform.query.filter_by(name = __dev).first()
+        if platform: # device is known for a platform
+            device_whitelisted = Platform.query.filter_by(devices = __mac).first()
+            # device_whitelisted = True
+            if device_whitelisted: 
+                if __mac in platforms[__dev]['whitelist']:
+                    if not platforms[__dev]['version']:
+                        log_event("ERROR: No update available.")
+                        return 'No update available.', 400
+                    if version.parse(__ver) < version.parse(platforms[__dev]['version']):
+                        if os.path.isfile(app.config['UPLOAD_FOLDER'] + '/' + platforms[__dev]['file']):
+                            platforms[__dev]['downloads'] += 1
+                            save_yaml(platforms)
+                            return send_from_directory(directory=app.config['UPLOAD_FOLDER'], filename=platforms[__dev]['file'],
+                                                    as_attachment=True, mimetype='application/octet-stream',
+                                                    attachment_filename=platforms[__dev]['file'])
+                    else:
+                        log_event("INFO: No update needed.")
+                        return 'No update needed.', 304
+                else:
+                    log_event("ERROR: Device not whitelisted.")
+                    return 'Error: Device not whitelisted.', 400
+            else:
+                log_event("ERROR: Unknown platform.")
+                return 'Error: Unknown platform.', 400
+        else:
+            log_event("ERROR: Unkown platform")
+            return 'Error: Unkown platform', 500
+    log_event("ERROR: Invalid parameters.")
+    return 'Error: Invalid parameters.', 400

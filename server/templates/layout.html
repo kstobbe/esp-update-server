@@ -28,6 +28,11 @@
                             </a>
                             {% endif %}
                             {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('main.status') }}" class="navbar-item">
+                                Status
+                            </a>
+                            {% endif %}
+                            {% if current_user.is_authenticated %}
                             <a href="{{ url_for('main.create') }}" class="navbar-item">
                                 Create platform
                             </a>
