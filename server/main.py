@@ -1,13 +1,14 @@
 # main.py
 
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, send_from_directory, current_app
 from flask_login import login_required, current_user
 from .models import User, Platform, Device
 from . import db
 from datetime import datetime
 import time
 import re
-
+from packaging import version # for semver support
+import os
 
 main = Blueprint('main', __name__)
 
@@ -71,9 +72,7 @@ def status():
 
 @main.route('/update', methods=['GET'])
 def update():
-
     __error = 400
-    
     __dev = request.args.get('dev', default=None) # get requested device version
     if 'X_ESP8266_STA_MAC' in request.headers:
         __mac = request.headers['X_ESP8266_STA_MAC']
@@ -86,46 +85,46 @@ def update():
     else:
         __mac = ''
         log_event("WARN: Update called without known headers.")
-    __ver = request.args.get('ver', default=None)
+    __ver = version.parse(request.args.get('ver', default=None)) # parse version, brings a bit extra safety
     if __dev and __mac and __ver:
         # If we know this device already
         device = Device.query.filter_by(mac=__mac).first()
         if device:
             device.last_seen = datetime.utcnow()
+            device.version = str(__ver)
         else:
-            device = Device(mac=__mac)
+            device = Device(mac=__mac, version = str(__ver))
             # add the new device to the database
             db.session.add(device)
         db.session.commit()
  
-        log_event("INFO: Device type: " + __dev + "Ver: " + __ver)
+        log_event("INFO: Device type: " + __dev + " Ver: " + str(__ver))
         __dev = __dev.lower()
         # platform = Platform.query.join(Device).filter(Device.mac).first()
         platform = Platform.query.filter_by(name = __dev).first()
         if platform: # device is known for a platform
-            device_whitelisted = Platform.query.filter_by(devices = __mac).first()
+            device_whitelisted = Platform.query.join(Device).filter(Device.mac== __mac).first()
             # device_whitelisted = True
             if device_whitelisted: 
-                if __mac in platforms[__dev]['whitelist']:
-                    if not platforms[__dev]['version']:
+                    if not platform.version: # when no file has been uploaded
                         log_event("ERROR: No update available.")
                         return 'No update available.', 400
-                    if version.parse(__ver) < version.parse(platforms[__dev]['version']):
-                        if os.path.isfile(app.config['UPLOAD_FOLDER'] + '/' + platforms[__dev]['file']):
-                            platforms[__dev]['downloads'] += 1
-                            save_yaml(platforms)
-                            return send_from_directory(directory=app.config['UPLOAD_FOLDER'], filename=platforms[__dev]['file'],
+                    if __ver < version.parse(platform.version):
+                        if os.path.isfile(current_app.config['UPLOAD_FOLDER'] + '/' + platform.file):
+                            platform.downloads += 1
+                            db.session.commit()
+                            return send_from_directory(directory=current_app.config['UPLOAD_FOLDER'], filename=platform.file,
                                                     as_attachment=True, mimetype='application/octet-stream',
-                                                    attachment_filename=platforms[__dev]['file'])
+                                                    attachment_filename=platform.file)
                     else:
                         log_event("INFO: No update needed.")
                         return 'No update needed.', 304
-                else:
-                    log_event("ERROR: Device not whitelisted.")
-                    return 'Error: Device not whitelisted.', 400
             else:
-                log_event("ERROR: Unknown platform.")
-                return 'Error: Unknown platform.', 400
+                log_event("ERROR: Device not whitelisted.")
+                # Temporarily whitelist immediately! TODO: REMOVE THIS IN PROD!
+                device.type = platform.id
+                db.session.commit()
+                return 'Error: Device not whitelisted.', 400
         else:
             log_event("ERROR: Unkown platform")
             return 'Error: Unkown platform', 500

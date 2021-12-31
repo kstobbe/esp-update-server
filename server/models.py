@@ -19,6 +19,8 @@ class Platform(db.Model):
     uploaded = db.Column(db.DateTime)
     notes = db.Column(db.String(1000)) # add any notes about the platform
     devices = db.relationship('Device', backref='platform', lazy=True)
+    file = db.Column(db.String(100))
+    downloads = db.Column(db.Integer, default = 0)
     
 class Device(db.Model):
     id = db.Column(db.Integer, primary_key=True) # primary keys are required by SQLAlchemy

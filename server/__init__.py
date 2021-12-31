@@ -13,6 +13,7 @@ def create_app():
     app.config['SECRET_KEY'] = 'SECRET_KEY_HERE'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bin/db.sqlite'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+    app.config['UPLOAD_FOLDER'] = './bin'
     db.init_app(app)
 
     login_manager = LoginManager()
