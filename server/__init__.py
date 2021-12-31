@@ -14,7 +14,9 @@ def create_app():
     app.config['SECRET_KEY'] = 'SECRET_KEY_HERE'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bin/db.sqlite'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-    app.config['UPLOAD_FOLDER'] = './bin'
+    app.config['UPLOAD_FOLDER'] = 'bin' # where to store the uploaded firmware-files
+    app.config['ALLOWED_EXTENSIONS'] = set(['bin']) # set the file-extensions that users are allowed to upload here
+    app.config['DELETE_OLD_FILES'] = True # Do we delete old binaries after a new one has been uploaded
     db.init_app(app)
     moment = Moment(app)
 

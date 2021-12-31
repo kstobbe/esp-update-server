@@ -37,6 +37,11 @@
                                 Create platform
                             </a>
                             {% endif %}
+                            {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('main.upload') }}" class="navbar-item">
+                                Upload file
+                            </a>
+                            {% endif %}
                             {% if not current_user.is_authenticated %}
                             <a href="{{ url_for('auth.login') }}" class="navbar-item">
                                 Login

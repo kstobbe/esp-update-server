@@ -21,6 +21,10 @@ import os
 
 main = Blueprint("main", __name__)
 
+# Returns true if the extension of `filename` is allowed
+def allowed_ext(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in current_app.config["ALLOWED_EXTENSIONS"]
 
 def log_event(msg):
     st = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S")
@@ -40,6 +44,7 @@ def profile():
 
 
 @main.route("/create")
+@login_required
 def create():
     return render_template("create.html")
 
@@ -154,3 +159,63 @@ def update():
             return "Error: Unkown platform", 500
     log_event("ERROR: Invalid parameters.")
     return "Error: Invalid parameters.", 400
+
+
+@main.route("/upload")
+@login_required
+def upload():
+    return render_template("upload.html")
+
+
+@main.route("/upload", methods=["POST"])
+@login_required
+def upload_post():
+    if 'file' not in request.files:
+        flash('Error: No file selected.')
+        return redirect(request.url)
+    file = request.files['file']
+    if file.filename == '' or not allowed_ext(file.filename):
+        flash('Error: File upload error or wrong extension. Make sure you upload a file with the extension(s): {}'.format(str(current_app.config["ALLOWED_EXTENSIONS"])))
+        return redirect(request.url)
+    if file and allowed_ext(file.filename):
+        data = file.read()
+        platforms = Platform.query.all()
+        # for every platform that we have, we search if this platform is named in the binary and try to extract a version-number
+        for platform in platforms:
+            m = re.search(b"update\?dev=" + platform.name.encode('UTF-8') + b"&ver=(v\d+\.\d+\.\d+)\x00", data, re.IGNORECASE)
+            if m: # platform found!
+                __ver = m.groups()[0][1:].decode('utf-8')
+                # check if the uploaded file is an update to the version that we have in the database
+                if (platform.version is None) or (platform.version and version.parse(platform.version ) < version.parse(__ver)):
+                    old_file = platform.file
+                    filename = platform.name + '_' + __ver.replace('.', '_') + '.bin'
+                    platform.version = __ver
+                    platform.downloads = 0 # reset download-counter
+                    platform.file = filename.lower()
+                    platform.uploaded = datetime.utcnow()
+                    file.seek(0)
+                    file.save(os.path.join(os.path.dirname(__file__), current_app.config['UPLOAD_FOLDER'], filename))
+                    file.close()
+                    db.session.commit()
+                    # Only delete old file after db is updated; so the old file will not be deleted 
+                    if old_file and current_app.config['DELETE_OLD_FILES']:
+                        try:
+                            os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], old_file))
+                        except:
+                            flash('Error: Removing old file failed.')
+                    flash('Success: File uploaded for platform {} with version {}.'.format(platform.name, __ver))
+                    return redirect(url_for('main.status'))
+                else:
+                    flash('Error: Version must increase. File not uploaded.')
+                    return redirect(request.url)
+        m = re.search(b"update\?dev=" + platform.name.encode('UTF-8')+ b"&ver=$", data, re.IGNORECASE)
+        if m: # only a platform was found, meaning no version was found
+            flash('Error: No version found in file. File not uploaded.')
+            return redirect(request.url)
+        else:
+            flash('Error: No known platform name found in file. File not uploaded.')
+            return redirect(request.url)
+    else:
+        flash('Error: File type not allowed.')
+        return redirect(request.url)
+
