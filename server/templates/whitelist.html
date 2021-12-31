@@ -57,7 +57,7 @@
     {% for device in devices %}
     <tr>
       <td>{{ format_mac(device.mac.upper()) }}</td>
-      <td>{{device.version}}</td>
+      <td><span class="tag is-success">{{device.version}}</span></td>
       <td>{{device.requested_platform}}</td>
       <td>{{device.IP}}</td>
       <!-- <td>{{ moment(device.first_seen).format('DD-MM-YYYY HH:mm') }}</td>

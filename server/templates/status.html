@@ -10,55 +10,57 @@
   Easy system to manage OTA updates for Espressif-based devices
 </h2>
 {% with platforms = platforms %}
-    {% if platforms %}
-        {% for platform in platforms %}
-        <section class="section">
-            <b>Platform: </b>{{ platform.name }} - {{platform.notes}} <br>
-            <b>Downloads: </b> {{platform.downloads}}<br>
-            <b>Latest firmware: </b> {{platform.version}}<br>
-            {% if platform.devices %}
-            </section>
-            <div class="columns is-centered">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>MAC</th>
-                  <th><abbr title="Last-known version. Will only be updated after an updated device connects to the OTA server again, since we can't know if an update was successfull">Version</abbr></th>
-                  <th>IP</th>
-                  <th>First seen</th>
-                  <th>Last seen</th>
-                  <th>Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-              {% for device in platform.devices %}
-              <tr>
-                <td>{{ format_mac(device.mac.upper()) }}</td>
-                <td>{{device.version}}</td>
-                <td>{{device.IP}}</td>
-                <!-- <td>{{ moment(device.first_seen).format('DD-MM-YYYY HH:mm') }}</td>
+{% if platforms %}
+{% for platform in platforms %}
+<section class="box">
+  <b>Platform: </b>{{ platform.name }} - {{platform.notes}} <br>
+  <b>Downloads: </b> {{platform.downloads}}<br>
+  <b>Latest firmware: </b> {{platform.version}}<br>
+  {% if platform.devices %}
+<div class="columns is-centered">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>MAC</th>
+        <th><abbr
+            title="Last-known version. Will only be updated after an updated device connects to the OTA server again, since we can't know if an update was successfull">Version</abbr>
+        </th>
+        <th>IP</th>
+        <th>First seen</th>
+        <th>Last seen</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for device in platform.devices %}
+      <tr>
+        <td>{{ format_mac(device.mac.upper()) }}</td>
+        <td><span class="tag is-success">{{device.version}}</span></td>
+        <td>{{device.IP}}</td>
+        <!-- <td>{{ moment(device.first_seen).format('DD-MM-YYYY HH:mm') }}</td>
                 <td>{{  moment(device.last_seen).format('DD-MM-YYYY HH:mm') }} ({{ moment(device.last_seen).fromNow()}})</td> -->
-                <td>{{device.first_seen}}</td>
-                <td>{{device.last_seen}}</td>
-                <td>{{device.notes}}</td>
-              </tr>
-                
-              {% endfor %}
-            </tbody>
-            </table>
-            </div>
-            {% else %}
-            <div class="notification is-danger">
-              No devices for platform {{ platform.name }}
-            </div>
-            {% endif %}
-        {% endfor %}
-    {% else %}
-      <li><em>No platforms created.</em>
-    {% endif %}
-{% endwith %}
+        <td>{{device.first_seen}}</td>
+        <td>{{device.last_seen}}</td>
+        <td>{{device.notes}}</td>
+      </tr>
 
-{% endblock %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="notification is-danger">
+  No devices for platform {{ platform.name }}
+</div>
+{% endif %}
+</section>
+{% endfor %}
+{% else %}
+<li><em>No platforms created.</em>
+  {% endif %}
+  {% endwith %}
+
+  {% endblock %}
 
   <!-- 
   {% block body %}
