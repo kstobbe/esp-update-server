@@ -11,15 +11,15 @@ def create_app():
     app = Flask(__name__)
 
     app.config['SECRET_KEY'] = 'SECRET_KEY_HERE'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
-
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bin/db.sqlite'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
     db.init_app(app)
 
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
 
-    from .models import User
+    from .models import User, Platform, Device
 
     @login_manager.user_loader
     def load_user(user_id):

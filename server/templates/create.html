@@ -1,12 +1,33 @@
-{% extends "layout.html" %}
-{% block body %}
-  <h2>Create Platform</h2>
-  <form action="{{ url_for('create') }}" method=post class=add-entry>
-    <dl>
-      <dt>Platform name:
-      <dd><input type=text size=30 name=name>
-      <dd><input type=submit value=Create>
-    </dl>
-  </form>
-{% endblock %}
+<!-- templates/create.html -->
 
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+  <h3 class="title">Add platform</h3>
+  <div class="box">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="notification is-danger">
+      {{ messages[0] }}. Go to <a href="{{ url_for('main.create_post') }}">login page</a>.
+    </div>
+    {% endif %}
+    {% endwith %}
+    <form method="POST" action="">
+      <div class="field">
+        <div class="control">
+          <input class="input is-large" type="text" name="name" size=50 placeholder="platform name here" autofocus="">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="control">
+          <input class="input is-large" type="text" name="notes" placeholder="Notes about this platform here" autofocus="">
+        </div>
+      </div>
+
+      <button class="button is-block is-info is-large is-fullwidth">Sign Up</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
