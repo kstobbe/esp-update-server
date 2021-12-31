@@ -113,8 +113,9 @@ def update():
         if device:
             device.last_seen = datetime.utcnow()
             device.version = str(__ver)
+            device.requested_platform = __dev
         else:
-            device = Device(mac=__mac, version=str(__ver))
+            device = Device(mac=__mac, version=str(__ver), requested_platform=__dev)
             # add the new device to the database
             db.session.add(device)
         db.session.commit()
@@ -219,3 +220,47 @@ def upload_post():
         flash('Error: File type not allowed.')
         return redirect(request.url)
 
+
+@main.route("/whitelist")
+@login_required
+def whitelist():
+    devices = Device.query.filter_by(type=None)
+    platforms = Platform.query.all()
+    return render_template("whitelist.html", devices=devices, platforms=platforms)
+
+@main.route('/whitelist', methods=['POST'])
+@login_required
+def whitelist_post():
+    devices = Device.query.filter_by(type=None)
+    platforms = Platform.query.all()
+    if 'Add' in request.form['action']:
+        # Ensure valid data.
+        if request.form['device'] and request.form['device'] != '--' and request.form['macaddr']:
+            # Remove all unwanted characters.
+            __mac = str(re.sub(r'[^0-9A-fa-f]+', '', request.form['macaddr']).lower())
+            # Check length after clean-up makes up a full address.
+            if len(__mac) == 12:
+                # Check that address is not already on a whitelist.
+                known_device = Device.query.filter_by(mac=__mac).first()
+                if not known_device:
+                    flash('Error: Unknown device. Let the device connect to the OTA server before adding')
+                    return render_template("whitelist.html", devices=devices, platforms=platforms)
+                if known_device.type: 
+                        flash('Error: Address already on a whitelist.')
+                        return render_template("whitelist.html", devices=devices, platforms=platforms)
+                # All looks good - add to whitelist.
+                known_platform = Platform.query.filter_by(name=request.form['device']).first()
+                if known_device and known_platform:
+                    known_device.type = known_platform.id
+                    known_device.notes = request.form.get('notes')
+                    db.session.commit()
+                    flash('Success: Address added.')
+                else:
+                    flash('Error: Platform unkown')
+            else:
+                flash('Error: MAC address malformed.')
+        else:
+            flash('Error: No data entered.')
+    else:
+        flash('Error: Unknown action.')
+    return redirect(url_for('main.whitelist'))

@@ -1,68 +1,79 @@
+<!-- templates/status.html -->
+
 {% extends "layout.html" %}
-{% block body %}
-  <h2>Manage Whitelists</h2>
-  <form name="add" action="{{ url_for('whitelist') }}" method=post class=add-entry >
+
+{% block content %}
+<h1 class="title">
+  Whitelist
+</h1>
+<h2 class="subtitle">
+  Add new devices to the whitelist
+</h2>
+<div class="box">
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <div class="notification is-danger">
+    {{ messages[0] }}
+  </div>
+  {% endif %}
+  {% endwith %}
+  <form name="add" action="{{ url_for('main.whitelist') }}" method=post class=add-entry >
     <dl>
       <dt>MAC Address:
       <dd><input type=text size=30 name=macaddr>
+        <dt>Notes:
+        <dd><textarea name="notes"></textarea> 
       <dt>Platform:
       <dd><select name=device >
           <option value="--">--</option>
-        {% if platforms.keys() %}
-          {% for name in platforms.keys() %}
-            <option value="{{ name }}">{{ name.title() }}</option>
+        {% if platforms %}
+          {% for platform in platforms %}
+            <option value="{{ platform.name }}">{{ platform.name }}</option>
           {% endfor %}
         {% endif %}
       </select>
       <dd><input type=submit name=action value=Add>
     </dl>
   </form>
-
-  <table class="whitelist">
+</div>
+{% with devices = devices %}
+{% if devices %}
+<table class="table">
+  <thead>
     <tr>
-      <th>Platform</th>
-      <th>MAC Address</th>
-      <th></th>
-    </tr>
-    {% for key, value in platforms.items(): %}
-      {% if value['whitelist']: %}
-        {% for mac in value['whitelist']: %}
-        <tr>
-          <td>{{ key.title() }}</td>
-          <td>{{ format_mac(mac.upper()) }}</td>
-          <td>
-            <form name="remove" action="{{ url_for('whitelist') }}" method=post class=add-entry >
-              <input type="hidden" value="{{ key }}" name="device" />
-              <input type="hidden" value="{{ mac }}" name="macaddr" />
-              <input type=submit name=action value=Remove>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      {% endif %}
-    {% endfor %}
-  </table>
-
-<hr> <br>
-  <table class=maclist>
-    <tr>
-      <th></th>
-      <th>MAC Address</th>
+      <th>MAC</th>
+      <th><abbr
+          title="Last-known version. Will only be updated after an updated device connects to the OTA server again, since we can't know if an update was successfull">Version</abbr>
+      </th>
+      <th><abbr
+        title="The name that the device told us when requesting an OTA update">Expected Platform</abbr>
+    </th>
+      <th>IP</th>
       <th>First seen</th>
       <th>Last seen</th>
-      <th></th>
     </tr>
-    {% for key, value in known_macs.items(): %}
-      {% if value['first_seen']: %}
-        <tr>
-          <td> {{ '✔️' if value['platform'] else '❓' }}</td></td>
-          <td>{{ format_mac(key.upper()) }} </td>
-          <td>{{ moment(value['first_seen_dt']).format('DD-MM-YYYY HH:mm') }}</td>
-          <td>{{  moment(value['last_seen_dt']).format('DD-MM-YYYY HH:mm') }} ({{ moment(value['last_seen_dt']).fromNow()}})</td>
-        </tr>
-      {% endif %}
+  </thead>
+  <tbody>
+    {% for device in devices %}
+    <tr>
+      <td>{{ format_mac(device.mac.upper()) }}</td>
+      <td>{{device.version}}</td>
+      <td>{{device.requested_platform}}</td>
+      <td>{{device.IP}}</td>
+      <!-- <td>{{ moment(device.first_seen).format('DD-MM-YYYY HH:mm') }}</td>
+                <td>{{  moment(device.last_seen).format('DD-MM-YYYY HH:mm') }} ({{ moment(device.last_seen).fromNow()}})</td> -->
+      <td>{{device.first_seen}}</td>
+      <td>{{device.last_seen}}</td>
+      <td></td>
+    </tr>
+
     {% endfor %}
-  </table>
+  </tbody>
+</table>
+
+{% else %}
+<li><em>No new devices.</em>
+{% endif %}
+{% endwith %}
 
 {% endblock %}
-

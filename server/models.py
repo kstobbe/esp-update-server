@@ -31,3 +31,5 @@ class Device(db.Model):
     last_seen = db.Column(db.DateTime,server_default=func.now())
     notes = db.Column(db.String(1000)) # add any notes about the platform
     mac = db.Column(db.String(17),nullable = False) # aa:bb:cc:dd:de:ff
+    requested_platform = db.Column(db.String(100)) # the name of the platform that the device thinks it is
+
