@@ -12,8 +12,13 @@
 {% with platforms = platforms %}
     {% if platforms %}
         {% for platform in platforms %}
-            <b>Platform: </b>{{ platform.name }} - {{platform.notes}}
+        <section class="section">
+            <b>Platform: </b>{{ platform.name }} - {{platform.notes}} <br>
+            <b>Downloads: </b> {{platform.downloads}}<br>
+            <b>Latest firmware: </b> {{platform.version}}<br>
             {% if platform.devices %}
+            </section>
+            <div class="columns is-centered">
             <table class="table">
               <thead>
                 <tr>
@@ -41,6 +46,7 @@
               {% endfor %}
             </tbody>
             </table>
+            </div>
             {% else %}
             <div class="notification is-danger">
               No devices for platform {{ platform.name }}
