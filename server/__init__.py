@@ -7,6 +7,7 @@ from flask_moment import Moment
 
 # init SQLAlchemy so we can use it later in our models
 db = SQLAlchemy()
+moment = Moment()
 
 def create_app():
     app = Flask(__name__)
@@ -18,7 +19,7 @@ def create_app():
     app.config['ALLOWED_EXTENSIONS'] = set(['bin']) # set the file-extensions that users are allowed to upload here
     app.config['DELETE_OLD_FILES'] = True # Do we delete old binaries after a new one has been uploaded
     db.init_app(app)
-    moment = Moment(app)
+    moment.init_app(app)
 
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'

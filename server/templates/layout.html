@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css" />
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+    {{ moment.include_moment() }}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 
@@ -25,11 +26,6 @@
                             <a href="{{ url_for('main.index') }}" class="navbar-item">
                                 Home
                             </a>
-                            {% if current_user.is_authenticated %}
-                            <a href="{{ url_for('main.profile') }}" class="navbar-item">
-                                Profile
-                            </a>
-                            {% endif %}
                             {% if current_user.is_authenticated %}
                             <a href="{{ url_for('main.whitelist') }}" class="navbar-item">
                                 Whitelist
@@ -65,12 +61,20 @@
         </div>
 
         <div class="hero-body">
-            <div class="container has-text-centered">
+            <div class="container has-text-centered is-fluid">
                {% block content %}
                {% endblock %}
             </div>
         </div>
     </section>
+    <footer class="footer">
+        <div class="content has-text-centered">
+          <p>
+            <strong>ESP update server</strong> by M. van Noord, original by K. Stobbe. The source code is licensed
+            <a href="http://opensource.org/licenses/mit-license.php">MIT</a> and can be found on <a href="https://github.com/marcovannoord/esp-update-server">GitHub</a>.
+          </p>
+        </div>
+      </footer>
 </body>
 
 </html>

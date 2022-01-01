@@ -11,6 +11,7 @@ from flask import (
     current_app,
 )
 from flask_login import login_required, current_user
+from sqlalchemy.sql.expression import desc
 from .models import User, Platform, Device
 from . import db
 from datetime import datetime
@@ -86,14 +87,14 @@ def utility_processor():
 @login_required
 def whitelist():
     platforms = Platform.query.all()
-    unbound_devices = Device.query.filter_by(type=None)
+    unbound_devices = Device.query.filter_by(type=None).order_by(desc(Device.last_seen))
     return render_template("whitelist.html", platforms=platforms,unbound_devices=unbound_devices)
 
 @main.route('/whitelist', methods=['POST'])
 @login_required
 def whitelist_post():
     platforms = Platform.query.all()
-    unbound_devices = Device.query.filter_by(type=None)
+    unbound_devices = Device.query.filter_by(type=None).order_by(desc(Device.last_seen))
     # Delete platform binding
     if request.form.get('_method') and 'DELETE' in request.form.get('_method'):
         if request.form['_device']:
@@ -169,15 +170,15 @@ def update():
             device.last_seen = datetime.utcnow()
             device.version = str(__ver)
             device.requested_platform = __dev
+            device.IP = request.remote_addr
         else:
-            device = Device(mac=__mac, version=str(__ver), requested_platform=__dev)
+            device = Device(mac=__mac, version=str(__ver), requested_platform=__dev, IP=request.remote_addr)
             # add the new device to the database
             db.session.add(device)
         db.session.commit()
 
         log_event("INFO: Device type: " + __dev + " Ver: " + str(__ver))
         __dev = __dev.lower()
-        # platform = Platform.query.join(Device).filter(Device.mac).first()
         platform = Platform.query.filter_by(name=__dev).first()
         if platform:  # device is known for a platform
             device_whitelisted = (
