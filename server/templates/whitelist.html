@@ -19,8 +19,8 @@
   {% endwith %}
   <div class="card">
     <div class="card-content">
-      <h2>Add device</h2>
-      <h3>Bind devices to a platform</h3>
+      <h2 class="title has-text-grey-darker">Add device</h2>
+      <h3 class="subtitle has-text-grey-darker">Bind devices to a platform</h3>
     </div>
     <form name="ADD" action="{{ url_for('main.whitelist') }}" method=post class=dropdown>
       <dl>
@@ -47,7 +47,20 @@
 {% for platform in platforms %}
 <section class="box">
   <div class="card-content">
-    <b>Platform: </b>{{ platform.name }} - {{platform.notes}} <br>
+    <h2 class="title has-text-grey-darker">{{ platform.name }}</h2>
+    <b>Notes: </b> 
+      <span class="icon is-medium">
+        {{platform.notes}} 
+        <form name="notes" action="{{ url_for('main.whitelist') }}" id="platformnotesform{{platform.id}}" method="POST">
+          <input type="hidden" name="_method" value="PLATFORMNOTES">
+          <input type="hidden" name="_platform" value="{{platform.id}}">
+          <input type="hidden" name="_notes" id="platformnotes{{platform.id}}">
+          <i onclick="var input = prompt('Enter new notes', '{{platform.notes}}');if(input===null)return false;$('#platformnotes{{platform.id}}').val(input);$('#platformnotesform{{platform.id}}').submit();"><img
+              src="{{ url_for('static', filename='note-edit.svg') }}"></i>
+        </form>
+      </span>
+    
+    <br>
     <b>Downloads: </b> {{platform.downloads}}<br>
     <b>Latest firmware: </b> {{platform.version}}<br>
   </div>
@@ -84,9 +97,9 @@
                   <input type="hidden" name="_method" value="NOTES">
                   <input type="hidden" name="_device" value="{{device.id}}">
                   <input type="hidden" name="_notes" id="notes{{device.id}}">
-                  <button class="btn btn-link"
+                  <i class="btn btn-link"
                     onclick="var input = prompt('Enter new notes', '{{device.notes}}');if(input===null)return false;$('#notes{{device.id}}').val(input);$('#notesform{{device.id}}').submit();"><img
-                      src="{{ url_for('static', filename='note-edit.svg') }}"></button>
+                      src="{{ url_for('static', filename='note-edit.svg') }}"></i>
                 </form>
               </span>
             </td>
@@ -95,9 +108,9 @@
                 <form name="delete" action="{{ url_for('main.whitelist') }}" method="POST">
                   <input type="hidden" name="_method" value="DELETE">
                   <input type="hidden" name="_device" value="{{device.id}}">
-                  <button type="submit" class="btn btn-link"
+                  <i type="submit" class="btn btn-link"
                     onclick="if (!confirm('Are you sure you want to unbind this device from {{ platform.name }} ?')) { return false }"><img
-                      src="{{ url_for('static', filename='trash-can-outline.svg') }}"></button>
+                      src="{{ url_for('static', filename='trash-can-outline.svg') }}"></i>
                 </form>
               </span>
             </td>
@@ -127,8 +140,8 @@
   {% if devices %}
   <section class="box">
     <div class="card-content">
-      <h2>New devices</h2>
-      <h3>These devices have been seen, but have not been whitelisted to a platform yet.</h3>
+      <h2 class="title has-text-grey-darker">New devices</h2>
+      <h3 class="subtitle has-text-grey-darker">These devices have been seen, but have not been whitelisted to a platform yet.</h3>
     </div>
     <div class="card">
       <div class="columns is-centered">
@@ -166,16 +179,16 @@
                     <input type="hidden" name="_method" value="NOTES">
                     <input type="hidden" name="_device" value="{{device.id}}">
                     <input type="hidden" name="_notes" id="notes{{device.id}}">
-                    <button class="btn btn-link"
+                    <i class="btn btn-link"
                       onclick="var input = prompt('Enter new notes', '{{device.notes}}');if(input===null)return false;$('#notes{{device.id}}').val(input);$('#notesform{{device.id}}').submit();"><img
-                        src="{{ url_for('static', filename='note-edit.svg') }}"></button>
+                        src="{{ url_for('static', filename='note-edit.svg') }}"></i>
                   </form>
                 </span>
               </td>
               <td class="bd-icon-size">
                 <span class="icon is-medium">
-                  <button class="btn btn-link" onclick="fillMac('{{format_mac(device.mac.upper())}}')"><img
-                      src="{{ url_for('static', filename='plus-box.svg') }}"></button>
+                  <i class="btn btn-link" onclick="fillMac('{{format_mac(device.mac.upper())}}')"><img
+                      src="{{ url_for('static', filename='plus-box.svg') }}"></i>
                 </span>
               </td>
               <td></td>
