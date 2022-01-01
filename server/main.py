@@ -82,18 +82,19 @@ def utility_processor():
     return dict(format_mac=format_mac)
 
 
-@main.route("/status")
+@main.route("/whitelist")
 @login_required
-def status():
+def whitelist():
     platforms = Platform.query.all()
     unbound_devices = Device.query.filter_by(type=None)
-    return render_template("status.html", platforms=platforms,unbound_devices=unbound_devices)
+    return render_template("whitelist.html", platforms=platforms,unbound_devices=unbound_devices)
 
-@main.route('/status', methods=['POST'])
+@main.route('/whitelist', methods=['POST'])
 @login_required
-def status_post():
+def whitelist_post():
     platforms = Platform.query.all()
     unbound_devices = Device.query.filter_by(type=None)
+    # Delete platform binding
     if request.form.get('_method') and 'DELETE' in request.form.get('_method'):
         if request.form['_device']:
             device_id = request.form.get('_device',type=int)
@@ -102,8 +103,16 @@ def status_post():
             db.session.commit()
             flash("Deleted device from platform")
 
-    if request.form.get('_method') and 'ADD' in request.form.get('_method'):
-        devices = Device.query.filter_by(type=None)
+    # Edit notes
+    if request.form.get('_method') and 'NOTES' in request.form.get('_method'):
+        if request.form['_device']:
+            device_id = request.form.get('_device',type=int)
+            device = Device.query.filter_by(id=device_id).first()
+            device.notes = request.form.get('_notes') # update the note
+            db.session.commit()
+            flash("Updated note")
+
+    elif request.form.get('action') and 'ADD' in request.form.get('action'):
         # Ensure valid data.
         if request.form['device'] and request.form['device'] != '--' and request.form['macaddr']:
             # Remove all unwanted characters.
@@ -114,17 +123,17 @@ def status_post():
                 known_device = Device.query.filter_by(mac=__mac).first()
                 if not known_device:
                     flash('Error: Unknown device. Let the device connect to the OTA server before adding')
-                    return render_template("status.html", platforms=platforms, unbound_devices=unbound_devices)
+                    return render_template("whitelist.html", platforms=platforms, unbound_devices=unbound_devices)
                 if known_device.type: 
                         flash('Error: Address already on a whitelist.')
-                        return render_template("status.html", platforms=platforms, unbound_devices=unbound_devices)
+                        return render_template("whitelist.html", platforms=platforms, unbound_devices=unbound_devices)
                 # All looks good - add to whitelist.
                 known_platform = Platform.query.filter_by(name=request.form['device']).first()
                 if known_device and known_platform:
                     known_device.type = known_platform.id
                     known_device.notes = request.form.get('notes')
                     db.session.commit()
-                    flash('Success: Address added.')
+                    flash('Success: {} added to platform {}'.format(known_device.mac, known_platform.name))
                 else:
                     flash('Error: Platform unkown')
             else:
@@ -133,8 +142,7 @@ def status_post():
             flash('Error: No data entered.')
     else:
         flash('Error: Unknown action.')
-
-    return render_template("status.html", platforms=platforms, unbound_devices=unbound_devices)
+    return render_template("whitelist.html", platforms=platforms, unbound_devices=unbound_devices)
 
 @main.route("/update", methods=["GET"])
 def update():
@@ -154,7 +162,7 @@ def update():
     __ver = version.parse(
         request.args.get("ver", default=None)
     )  # parse version, brings a bit extra safety
-    if __dev and __mac and __ver:
+    if __dev and __mac and __ver and len(__mac) == 12:
         # If we know this device already
         device = Device.query.filter_by(mac=__mac).first()
         if device:
@@ -252,7 +260,7 @@ def upload_post():
                         except:
                             flash('Error: Removing old file failed.')
                     flash('Success: File uploaded for platform {} with version {}.'.format(platform.name, __ver))
-                    return redirect(url_for('main.status'))
+                    return redirect(url_for('main.whitelist'))
                 else:
                     flash('Error: Version must increase. File not uploaded.')
                     return redirect(request.url)
@@ -267,10 +275,3 @@ def upload_post():
         flash('Error: File type not allowed.')
         return redirect(request.url)
 
-
-@main.route("/whitelist")
-@login_required
-def whitelist():
-    devices = Device.query.filter_by(type=None)
-    platforms = Platform.query.all()
-    return render_template("whitelist.html", devices=devices, platforms=platforms)

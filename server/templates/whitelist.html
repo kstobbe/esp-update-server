@@ -7,7 +7,7 @@
   Whitelist
 </h1>
 <h2 class="subtitle">
-  Add new devices to the whitelist
+  Easy system to manage OTA updates for Espressif-based devices
 </h2>
 <div class="box">
   {% with messages = get_flashed_messages() %}
@@ -17,63 +17,176 @@
   </div>
   {% endif %}
   {% endwith %}
-  <form name="add" action="{{ url_for('main.whitelist') }}" method=post class=add-entry >
+  <div class="card">
+    <div class="card-content">
+      <h2>Add device</h2>
+      <h3>Bind devices to a platform</h3>
+    </div>
+  <form name="ADD" action="{{ url_for('main.whitelist') }}" method=post class=add-entry>
     <dl>
       <dt>MAC Address:
-      <dd><input type=text size=30 name=macaddr>
-        <dt>Notes:
-        <dd><textarea name="notes"></textarea> 
+      <dd><input type=text size=30 name="macaddr" id="macaddr">
+      <dt>Notes:
+      <dd><textarea name="notes"></textarea>
       <dt>Platform:
-      <dd><select name=device >
+      <dd><select name=device>
           <option value="--">--</option>
-        {% if platforms %}
+          {% if platforms %}
           {% for platform in platforms %}
-            <option value="{{ platform.name }}">{{ platform.name }}</option>
+          <option value="{{ platform.name }}">{{ platform.name }}</option>
           {% endfor %}
-        {% endif %}
-      </select>
-      <dd><input type=submit name=action value=Add>
+          {% endif %}
+        </select>
+      <dd><input class="button is-block is-info is-medium is-fullwidth" type=submit name=action value=ADD>
     </dl>
   </form>
+  </div>
 </div>
-{% with devices = devices %}
-{% if devices %}
-<table class="table">
-  <thead>
-    <tr>
-      <th>MAC</th>
-      <th><abbr
-          title="Last-known version. Will only be updated after an updated device connects to the OTA server again, since we can't know if an update was successfull">Version</abbr>
-      </th>
-      <th><abbr
-        title="The name that the device told us when requesting an OTA update">Expected Platform</abbr>
-    </th>
-      <th>IP</th>
-      <th>First seen</th>
-      <th>Last seen</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for device in devices %}
-    <tr>
-      <td>{{ format_mac(device.mac.upper()) }}</td>
-      <td><span class="tag is-success">{{device.version}}</span></td>
-      <td>{{device.requested_platform}}</td>
-      <td>{{device.IP}}</td>
-      <!-- <td>{{ moment(device.first_seen).format('DD-MM-YYYY HH:mm') }}</td>
+{% with platforms = platforms %}
+{% if platforms %}
+{% for platform in platforms %}
+<section class="box">
+  <div class="card-content">
+    <b>Platform: </b>{{ platform.name }} - {{platform.notes}} <br>
+    <b>Downloads: </b> {{platform.downloads}}<br>
+    <b>Latest firmware: </b> {{platform.version}}<br>
+  </div>
+  <div class="card">
+    {% if platform.devices %}
+    <div class="columns is-centered">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>MAC</th>
+            <th><abbr
+                title="Last-known version. Will only be updated after an updated device connects to the OTA server again, since we can't know if an update was successfull">Version</abbr>
+            </th>
+            <th>IP</th>
+            <th>First seen</th>
+            <th>Last seen</th>
+            <th>Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for device in platform.devices %}
+          <tr>
+            <td>{{ format_mac(device.mac.upper()) }}</td>
+            <td><span class="tag is-success">{{device.version}}</span></td>
+            <td>{{device.IP}}</td>
+            <!-- <td>{{ moment(device.first_seen).format('DD-MM-YYYY HH:mm') }}</td>
                 <td>{{  moment(device.last_seen).format('DD-MM-YYYY HH:mm') }} ({{ moment(device.last_seen).fromNow()}})</td> -->
-      <td>{{device.first_seen}}</td>
-      <td>{{device.last_seen}}</td>
-      <td></td>
-    </tr>
+            <td>{{device.first_seen}}</td>
+            <td>{{device.last_seen}}</td>
+            <td>{{device.notes}}</td>
+            <td class="bd-icon-size">
+              <span class="icon is-medium">
+                <form name="notes" action="{{ url_for('main.whitelist') }}" id="notesform" method="POST">
+                  <input type="hidden" name="_method" value="NOTES">
+                  <input type="hidden" name="_device" value="{{device.id}}">
+                  <input type="hidden" name="_notes" id="notes">
+                  <button class="btn btn-link"
+                    onclick="var input = prompt('Enter new notes', '{{device.notes}}');if(input===null)return false;$('#notes').val(input);$('#notesform').submit();"><img
+                      src="{{ url_for('static', filename='note-edit.svg') }}"></button>
+                </form>
+              </span>
+              <span class="icon is-medium">
+                <form name="delete" action="{{ url_for('main.whitelist') }}" method="POST">
+                  <input type="hidden" name="_method" value="DELETE">
+                  <input type="hidden" name="_device" value="{{device.id}}">
+                  <button type="submit" class="btn btn-link"
+                    onclick="if (!confirm('Are you sure you want to unbind this device from {{ platform.name }} ?')) { return false }"><img
+                      src="{{ url_for('static', filename='trash-can-outline.svg') }}"></button>
+                </form>
+              </span>
+            </td>
+          </tr>
 
-    {% endfor %}
-  </tbody>
-</table>
-
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="notification is-warning">
+      No devices for platform {{ platform.name }}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endfor %}
 {% else %}
-<li><em>No new devices.</em>
-{% endif %}
-{% endwith %}
+<li><em>No platforms created.</em>
+  {% endif %}
+  {% endwith %}
+  <script> function fillMac(mac) {
+      document.getElementById("macaddr").value = mac;
+    }
+  </script>
+  {% with devices = unbound_devices %}
+  {% if devices %}
+  <section class="box">
+    <div class="card-content">
+      <h2>New devices</h2>
+      <h3>These devices have been seen, but have not been whitelisted to a platform yet.</h3>
+    </div>
+    <div class="card">
+      <div class="columns is-centered">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>MAC</th>
+              <th><abbr
+                  title="Last-known version. Will only be updated after an updated device connects to the OTA server again, since we can't know if an update was successfull">Version</abbr>
+              </th>
+              <th><abbr title="The name that the device told us when requesting an OTA update">Platform</abbr>
+              </th>
+              <th>IP</th>
+              <th>First seen</th>
+              <th>Last seen</th>
+              <th>Notes</th>
+              <th>Add</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for device in devices %}
+            <tr>
+              <td>{{ format_mac(device.mac.upper()) }}</td>
+              <td><span class="tag is-success">{{device.version}}</span></td>
+              <td>{{device.requested_platform}}</td>
+              <td>{{device.IP}}</td>
+              <!-- <td>{{ moment(device.first_seen).format('DD-MM-YYYY HH:mm') }}</td>
+                  <td>{{  moment(device.last_seen).format('DD-MM-YYYY HH:mm') }} ({{ moment(device.last_seen).fromNow()}})</td> -->
+              <td>{{device.first_seen}}</td>
+              <td>{{device.last_seen}}</td>
+              <td>{{device.notes}}</td>
+              <td class="bd-icon-size">
+                <span class="icon is-medium">
+                  <form name="notes" action="{{ url_for('main.whitelist') }}" id="notesform" method="POST">
+                    <input type="hidden" name="_method" value="NOTES">
+                    <input type="hidden" name="_device" value="{{device.id}}">
+                    <input type="hidden" name="_notes" id="notes">
+                    <button class="btn btn-link"
+                      onclick="var input = prompt('Enter new notes', '{{device.notes}}');if(input===null)return false;$('#notes').val(input);$('#notesform').submit();"><img
+                        src="{{ url_for('static', filename='note-edit.svg') }}"></button>
+                  </form>
+                </span>
+                <span class="icon is-medium">
+                  <button class="btn btn-link" onclick="fillMac('{{format_mac(device.mac.upper())}}')"><img
+                      src="{{ url_for('static', filename='plus-box.svg') }}"></button>
+                </span>
+              </td>
+              <td></td>
+            </tr>
 
-{% endblock %}
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {% else %}
+        </div>
+<li><em>No new devices.</em>
+  {% endif %}
+  </div>
+  </section>
+  {% endwith %}
+  {% endblock %}
