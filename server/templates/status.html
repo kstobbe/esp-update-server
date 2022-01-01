@@ -9,6 +9,33 @@
 <h2 class="subtitle">
   Easy system to manage OTA updates for Espressif-based devices
 </h2>
+<div class="box">
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <div class="notification is-danger">
+    {{ messages[0] }}
+  </div>
+  {% endif %}
+  {% endwith %}
+  <form name="ADD" action="{{ url_for('main.status') }}" method=post class=add-entry >
+    <dl>
+      <dt>MAC Address:
+      <dd><input type=text size=30 name=macaddr>
+        <dt>Notes:
+        <dd><textarea name="notes"></textarea> 
+      <dt>Platform:
+      <dd><select name=device >
+          <option value="--">--</option>
+        {% if platforms %}
+          {% for platform in platforms %}
+            <option value="{{ platform.name }}">{{ platform.name }}</option>
+          {% endfor %}
+        {% endif %}
+      </select>
+      <dd><input type=submit name=action value=Add>
+    </dl>
+  </form>
+</div>
 {% with platforms = platforms %}
 {% if platforms %}
 {% for platform in platforms %}
@@ -29,6 +56,7 @@
         <th>First seen</th>
         <th>Last seen</th>
         <th>Notes</th>
+        <th>Delete?</th>
       </tr>
     </thead>
     <tbody>
@@ -42,6 +70,15 @@
         <td>{{device.first_seen}}</td>
         <td>{{device.last_seen}}</td>
         <td>{{device.notes}}</td>
+        <td class="bd-icon-size">
+          <span class="icon is-medium">
+            <form name="delete" action="{{ url_for('main.status') }}" method="POST">
+              <input type="hidden" name="_method" value="DELETE"> 
+              <input type="hidden" name="_device" value="{{device.id}}">
+              <button type="submit" class="btn btn-link" onclick="if (!confirm('Are you sure you want to unbind this device from {{ platform.name }} ?')) { return false }"><img src="{{ url_for('static', filename='trash-can-outline.svg') }}" ></button>
+              </form>
+            
+          </span></td>
       </tr>
 
       {% endfor %}
@@ -59,68 +96,57 @@
 <li><em>No platforms created.</em>
   {% endif %}
   {% endwith %}
-
-  {% endblock %}
-
-  <!-- 
-  {% block body %}
-  <h2>Platforms</h2>
-  <ul class=entries>
-    {% if platforms: %}
-    {% for key, value in platforms.items(): %}
-    <li>
-      <h3>{{ key.title() }}</h3>
-      <table>
-        <tr>
-          <td>Version</td>
-          <td>&nbsp:&nbsp</td>
-          <td>
-            {% if value['version']: %}
-            {{ value['version'] }}
-            {% else %}
-            None
-            {% endif %}
-          </td>
-        </tr>
-        <tr>
-          <td>Uploaded</td>
-          <td>&nbsp:&nbsp</td>
-          <td>
-            {% if value['uploaded']: %}
-            {{ value['uploaded'] }}
-            {% else %}
-            None
-            {% endif %}
-          </td>
-        </tr>
-        <tr>
-          <td>Downloads</td>
-          <td>&nbsp:&nbsp</td>
-          <td>
-            {% if value['downloads']: %}
-            {{ value['downloads'] }}
-            {% else %}
-            0
-            {% endif %}
-          </td>
-        </tr>
-        <tr>
-          <td valign="top">Whitelist</td>
-          <td valign="top">&nbsp:&nbsp</td>
-          <td>
-            {% if value['whitelist']: %}
-            {% for device in value['whitelist']: %}
-            {{ format_mac(device.upper()) }}<br>
-            {% endfor %}
-            {% else %}
-            None
-            {% endif %}
-          </td>
-        </tr>
-      </table>
+  {% with devices = unbound_devices %}
+  {% if devices %}
+  <section class="box">
+    <h2>New devices</h2>
+    <h3>These devices have been seen, but have not been whitelisted to a platform yet.</h3>
+  
+  <div class="columns is-centered">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>MAC</th>
+        <th><abbr
+            title="Last-known version. Will only be updated after an updated device connects to the OTA server again, since we can't know if an update was successfull">Version</abbr>
+        </th>
+        <th><abbr
+          title="The name that the device told us when requesting an OTA update">Expected Platform</abbr>
+      </th>
+        <th>IP</th>
+        <th>First seen</th>
+        <th>Last seen</th>
+        <th>Add</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for device in devices %}
+      <tr>
+        <td>{{ format_mac(device.mac.upper()) }}</td>
+        <td><span class="tag is-success">{{device.version}}</span></td>
+        <td>{{device.requested_platform}}</td>
+        <td>{{device.IP}}</td>
+        <!-- <td>{{ moment(device.first_seen).format('DD-MM-YYYY HH:mm') }}</td>
+                  <td>{{  moment(device.last_seen).format('DD-MM-YYYY HH:mm') }} ({{ moment(device.last_seen).fromNow()}})</td> -->
+        <td>{{device.first_seen}}</td>
+        <td>{{device.last_seen}}</td>
+        <td class="bd-icon-size">
+          <span class="icon is-medium">
+            
+              <button class="btn btn-link" onclick="if (!confirm('Are you sure you want to unbind this device from  ?')) { return false }"><img src="{{ url_for('static', filename='plus-box.svg') }}" ></button>
+ 
+          </span></td>
+        <td></td>
+      </tr>
+  
       {% endfor %}
-      {% else %}
-    <li><em>No platforms created.</em>
-      {% endif %}
-  </ul>
-  {% endblock %} -->
+    </tbody>
+  </table>
+  
+  {% else %}
+  <li><em>No new devices.</em>
+  {% endif %}
+</div>
+</section>
+  {% endwith %}
+  {% endblock %}
