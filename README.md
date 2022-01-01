@@ -144,6 +144,10 @@ void checkForUpdates(void)
 }
 ```
 
+## TODO
+- [ ] Some way to allow users to become admin / usermanager
+- [ ] Ability to delete platforms
+
 ## Legal
 
 Project is under the [MIT License](LICENSE.md).
