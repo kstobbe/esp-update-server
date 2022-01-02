@@ -206,9 +206,6 @@ def update():
                     return "No update needed.", 304
             else:
                 log_event("ERROR: Device not whitelisted.")
-                # Temporarily whitelist immediately! TODO: REMOVE THIS IN PROD!
-                device.type = platform.id
-                db.session.commit()
                 return "Error: Device not whitelisted.", 400
         else:
             log_event("ERROR: Unkown platform")
