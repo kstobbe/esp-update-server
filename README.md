@@ -167,7 +167,6 @@ void checkForUpdates(void)
 - [ ] Ability to delete platforms
 - [ ] Better input handling/checking
 - [ ] Getting it production-ready and safe
-- [ ] Prevent underscores in platform-name
 - [ ] Make compatible with AutoConnect
 
 ## Legal

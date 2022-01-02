@@ -10,6 +10,7 @@ from flask import (
     send_from_directory,
     current_app,
 )
+from flask.helpers import make_response
 from flask_login import login_required, current_user
 from sqlalchemy.sql.expression import desc
 from .models import User, Platform, Device
@@ -19,6 +20,8 @@ import time
 import re
 from packaging import version  # for semver support
 import os
+import hashlib
+
 
 main = Blueprint("main", __name__)
 
@@ -154,6 +157,7 @@ def whitelist_post():
 def update():
     __error = 400
     __dev = request.args.get("dev", default=None)  # get requested device version
+
     if "X_ESP8266_STA_MAC" in request.headers:
         __mac = request.headers["X_ESP8266_STA_MAC"]
         __mac = str(re.sub(r"[^0-9A-fa-f]+", "", __mac.lower()))
@@ -165,10 +169,12 @@ def update():
     else:
         __mac = ""
         log_event("WARN: Update called without known headers.")
-    __ver = version.parse(
-        request.args.get("ver", default=None)
-    )  # parse version, brings a bit extra safety
-    if __dev and __mac and __ver and len(__mac) == 12:
+    __ver = version.parse(request.args.get("ver", default=None))  # parse version, brings a bit extra safety
+    platform_valid = re.match("^[a-zA-Z0-9\-]*$", __dev) # Check if the platform contains only valid characters
+    if not platform_valid:
+        log_event("ERROR: Invalid parameters.")
+        return "Error: Invalid parameters.", 400
+    if __dev and __mac and __ver and len(__mac) == 12 :
         # If we know this device already
         device = Device.query.filter_by(mac=__mac).first()
         if device:
@@ -187,26 +193,26 @@ def update():
         platform = Platform.query.filter_by(name=__dev).first()
         if platform:  # device is known for a platform
             device_whitelisted = (
-                Platform.query.join(Device).filter(Device.mac == __mac).first()
+                Platform.query.join(Device).filter(Device.mac == __mac).filter(Platform.name == __dev).first() # check if the device is whitelisted and is requesting the correct firmware
             )
-            # device_whitelisted = True
             if device_whitelisted:
                 if not platform.version:  # when no file has been uploaded
                     log_event("ERROR: No update available.")
                     return "No update available.", 400
                 if __ver < version.parse(platform.version):
-                    if os.path.isfile(
-                        current_app.config["UPLOAD_FOLDER"] + "/" + platform.file
-                    ):
+                    if os.path.isfile(os.path.join(os.path.dirname(__file__), current_app.config['UPLOAD_FOLDER'], platform.file)):
                         platform.downloads += 1
                         db.session.commit()
-                        return send_from_directory(
-                            directory=current_app.config["UPLOAD_FOLDER"],
-                            filename=platform.file,
+                        response = make_response(
+                         send_from_directory(
+                            directory=os.path.join(os.path.dirname(__file__), current_app.config['UPLOAD_FOLDER']),
+                            path=platform.file,
                             as_attachment=True,
                             mimetype="application/octet-stream",
                             attachment_filename=platform.file,
-                        )
+                        ))
+                        response.headers['x-MD5'] = get_MD5(platform.file)
+                        return response
                 else:
                     log_event("INFO: No update needed.")
                     return "No update needed.", 304
@@ -278,3 +284,11 @@ def upload_post():
         flash('Error: File type not allowed.')
         return redirect(request.url)
 
+def get_MD5(filename):
+    path = os.path.join(os.path.dirname(__file__), current_app.config['UPLOAD_FOLDER'], filename)
+    if os.path.isfile(path):
+        f = open(path, 'rb')
+        bin_file = f.read()
+        f.close()
+        md5 = hashlib.md5(bin_file).hexdigest()
+        return md5

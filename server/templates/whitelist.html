@@ -103,11 +103,11 @@
             </td>
             <td class="bd-icon-size">
               <span class="icon is-medium">
-                <form name="delete" action="{{ url_for('main.whitelist') }}" method="POST">
+                <form name="delete" action="{{ url_for('main.whitelist') }}" id="deleteform{{device.id}}" method="POST">
                   <input type="hidden" name="_method" value="DELETE">
                   <input type="hidden" name="_device" value="{{device.id}}">
                   <i type="submit" class="btn btn-link"
-                    onclick="if (!confirm('Are you sure you want to unbind this device from {{ platform.name }} ?')) { return false }"><img
+                    onclick="if (!confirm('Are you sure you want to unbind this device from {{ platform.name }} ?')) { return false }$('#deleteform{{device.id}}').submit();"><img
                       src="{{ url_for('static', filename='trash-can-outline.svg') }}"></i>
                 </form>
               </span>
@@ -132,6 +132,7 @@
   {% endwith %}
   <script> function fillMac(mac) {
       document.getElementById("macaddr").value = mac;
+      document.getElementById("macaddr").scrollIntoView();
     }
   </script>
   {% with devices = unbound_devices %}
