@@ -37,18 +37,21 @@ def create_app():
 
     # check if we need to add an Admin-user
     ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL')
-    ADMIN_PASSWORD = os.environ.get('ADMIN_PASS')
+    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
     if ADMIN_EMAIL and ADMIN_PASSWORD:
-        user = User.query.filter_by(email=ADMIN_EMAIL).first() # if this returns a user, then the email already exists in database
-        if user: # if a user is found, we want to make it an admin
+        with app.app_context():
+            user = User.query.filter_by(email=ADMIN_EMAIL).first() # if this returns a user, then the email already exists in database
+            if user: # if a user is found, we want to make it an admin
+                user.admin = True  
             user.admin = True 
-        else:
-            # create new user with the supplied data. Hash the password so plaintext version isn't saved.
-            new_user = User(email=ADMIN_EMAIL, name="Admin", password=generate_password_hash(ADMIN_PASSWORD, method='sha256'))
-            # add the new user to the database
-            db.session.add(new_user)
-        # store all changes
-        db.session.commit()
+                user.admin = True  
+            else:
+                # create new user with the supplied data. Hash the password so plaintext version isn't saved.
+                new_user = User(email=ADMIN_EMAIL, name="Admin", password=generate_password_hash(ADMIN_PASSWORD, method='sha256'), admin=True)
+                # add the new user to the database
+                db.session.add(new_user)
+            # store all changes
+            db.session.commit()
 
     @login_manager.user_loader
     def load_user(user_id):
