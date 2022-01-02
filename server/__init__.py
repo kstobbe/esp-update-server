@@ -43,8 +43,6 @@ def create_app():
             user = User.query.filter_by(email=ADMIN_EMAIL).first() # if this returns a user, then the email already exists in database
             if user: # if a user is found, we want to make it an admin
                 user.admin = True  
-            user.admin = True 
-                user.admin = True  
             else:
                 # create new user with the supplied data. Hash the password so plaintext version isn't saved.
                 new_user = User(email=ADMIN_EMAIL, name="Admin", password=generate_password_hash(ADMIN_PASSWORD, method='sha256'), admin=True)
@@ -65,5 +63,15 @@ def create_app():
     # blueprint for non-auth parts of app
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
+    sentry_sdk.init(
+    dsn="https://ccfebfa76dc645acbc16566836763e5b@o231748.ingest.sentry.io/6118097",
+    integrations=[FlaskIntegration()],
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0
+)
+
 
     return app
