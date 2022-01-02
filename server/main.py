@@ -123,14 +123,18 @@ def whitelist_post():
             if len(__mac) == 12:
                 # Check that address is not already on a whitelist.
                 known_device = Device.query.filter_by(mac=__mac).first()
-                if not known_device:
-                    flash('Error: Unknown device. Let the device connect to the OTA server before adding')
-                    return render_template("whitelist.html", platforms=platforms, unbound_devices=unbound_devices)
-                if known_device.type: 
+                if known_device and known_device.type: 
                         flash('Error: Address already on a whitelist.')
                         return render_template("whitelist.html", platforms=platforms, unbound_devices=unbound_devices)
                 # All looks good - add to whitelist.
                 known_platform = Platform.query.filter_by(name=request.form['device']).first()
+                if not known_device and known_platform: # device was not know, but platform is
+                    device = Device(mac=__mac, type=known_platform.id, notes=request.form.get('notes'))
+                    # add the new device to the database
+                    db.session.add(device)
+                    db.session.commit()
+                    flash('Success: Added previously unkown device {} to whitelist of {}'.format(__mac, known_platform.name))
+                    return render_template("whitelist.html", platforms=platforms, unbound_devices=unbound_devices)
                 if known_device and known_platform:
                     known_device.type = known_platform.id
                     known_device.notes = request.form.get('notes')
