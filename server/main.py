@@ -57,10 +57,12 @@ def create_post():
     if not platform_name:
         flash("No platform name entered")
         return redirect(url_for("main.create"))
+    m = re.match("^[a-zA-Z0-9\-]*$", platform_name)
+    if not m: # Platform has invalid characters
+        flash('Error: Platform name contains illegal characters. Only a-Z, 0-9 and - are allowed')
+        return redirect(url_for("main.create"))
 
-    platform = Platform.query.filter_by(
-        name=platform_name
-    ).first()  # if this returns a user, then the email already exists in database
+    platform = Platform.query.filter_by(name=platform_name).first()  # if this returns a result, then the platform already exists in database
     if platform:
         flash("Platform already exists")
         return redirect(url_for("main.create"))
