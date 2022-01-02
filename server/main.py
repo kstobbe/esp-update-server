@@ -34,7 +34,6 @@ def log_event(msg):
 
 @main.route("/")
 def index():
-    db.create_all()  # a bit dirty, but create all tables on load of the main. Doesn't re-create any already existing tables
     return render_template("index.html")
 
 
@@ -72,7 +71,7 @@ def create_post():
     # add the new user to the database
     db.session.add(new_platform)
     db.session.commit()
-    return redirect(url_for("main.index"))
+    return redirect(url_for("main.whitelist"))
 
 
 @main.context_processor

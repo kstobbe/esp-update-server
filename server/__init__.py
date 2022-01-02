@@ -1,13 +1,19 @@
 # init.py
 
+import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager 
 from flask_moment import Moment
+from werkzeug.security import generate_password_hash
 
 # init SQLAlchemy so we can use it later in our models
 db = SQLAlchemy()
 moment = Moment()
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+
+
 
 def create_app():
     app = Flask(__name__)
@@ -26,6 +32,23 @@ def create_app():
     login_manager.init_app(app)
 
     from .models import User, Platform, Device
+    with app.app_context():
+        db.create_all()  # a bit dirty, but push the app context, so sqlalchemy knows about the context, and then create all tables
+
+    # check if we need to add an Admin-user
+    ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL')
+    ADMIN_PASSWORD = os.environ.get('ADMIN_PASS')
+    if ADMIN_EMAIL and ADMIN_PASSWORD:
+        user = User.query.filter_by(email=ADMIN_EMAIL).first() # if this returns a user, then the email already exists in database
+        if user: # if a user is found, we want to make it an admin
+            user.admin = True 
+        else:
+            # create new user with the supplied data. Hash the password so plaintext version isn't saved.
+            new_user = User(email=ADMIN_EMAIL, name="Admin", password=generate_password_hash(ADMIN_PASSWORD, method='sha256'))
+            # add the new user to the database
+            db.session.add(new_user)
+        # store all changes
+        db.session.commit()
 
     @login_manager.user_loader
     def load_user(user_id):
