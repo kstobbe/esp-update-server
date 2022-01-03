@@ -273,13 +273,12 @@ def upload_post():
                 else:
                     flash('Error: Version must increase. File not uploaded.')
                     return redirect(request.url)
-        m = re.search(b"update\?dev=" + platform.name.encode('UTF-8')+ b"&ver=$", data, re.IGNORECASE)
-        if m: # only a platform was found, meaning no version was found
-            flash('Error: No version found in file. File not uploaded.')
-            return redirect(request.url)
-        else:
-            flash('Error: No known platform name found in file. File not uploaded.')
-            return redirect(request.url)
+            m = re.search(b"update\?dev=" + platform.name.encode('UTF-8')+ b"&ver=$", data, re.IGNORECASE)
+            if m: # only a platform was found, meaning no version was found
+                flash('Error: No version found in file. File not uploaded.')
+                return redirect(request.url)
+        flash('Error: No known platform name found in file. File not uploaded.')
+        return redirect(request.url)
     else:
         flash('Error: File type not allowed.')
         return redirect(request.url)

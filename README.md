@@ -31,7 +31,7 @@ SET ADMIN_PASSWORD=verysecurepassword
 ```
 Docker:
 ```
-docker run -d --restart unless-stopped --name esp-update-server -v $PWD/bin:/esp-update-server/bin -p 5000:5000 --env ADMIN_EMAIL=desired_login_email@yahoo.com --env ADMIN_PASSWORD=verysecurepassword marcovannoord/esp-update-server:latest
+docker run  --rm -it -v $PWD/server/bin:/server/bin --env ADMIN_EMAIL=desired_login_email@yahoo.com --env ADMIN_PASSWORD=verysecurepassword -p 5000:5000/tcp marcovannoord/esp-update-server:latest
 ```
 
 ### Start server from source
