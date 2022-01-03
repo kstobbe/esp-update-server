@@ -76,6 +76,7 @@ def create_post():
     # add the new user to the database
     db.session.add(new_platform)
     db.session.commit()
+    flash("Success: Added new platform{}".format(new_platform.name),'success')
     return redirect(url_for("main.whitelist"))
 
 
@@ -106,7 +107,7 @@ def whitelist_post():
             device = Device.query.filter_by(id=device_id).first()
             device.type = None # Set the type to None, instead of deleting the device completely
             db.session.commit()
-            flash("Deleted device from platform")
+            flash("Deleted device from platform",'success')
 
     # Edit notes
     if request.form.get('_method') and 'NOTES' in request.form.get('_method'):
@@ -115,7 +116,7 @@ def whitelist_post():
             device = Device.query.filter_by(id=device_id).first()
             device.notes = request.form.get('_notes') # update the note
             db.session.commit()
-            flash("Updated note")
+            flash("Updated note",'success')
 
     elif request.form.get('action') and 'ADD' in request.form.get('action'):
         # Ensure valid data.
@@ -136,13 +137,13 @@ def whitelist_post():
                     # add the new device to the database
                     db.session.add(device)
                     db.session.commit()
-                    flash('Success: Added previously unkown device {} to whitelist of {}'.format(__mac, known_platform.name))
+                    flash('Success: Added previously unkown device {} to whitelist of {}'.format(__mac, known_platform.name),'success')
                     return render_template("whitelist.html", platforms=platforms, unbound_devices=unbound_devices)
                 if known_device and known_platform:
                     known_device.type = known_platform.id
                     known_device.notes = request.form.get('notes')
                     db.session.commit()
-                    flash('Success: {} added to platform {}'.format(known_device.mac, known_platform.name))
+                    flash('Success: {} added to platform {}'.format(known_device.mac, known_platform.name),'success')
                 else:
                     flash('Error: Platform unkown')
             else:
@@ -268,7 +269,7 @@ def upload_post():
                             os.remove(os.path.join(os.path.dirname(__file__),current_app.config['UPLOAD_FOLDER'], old_file))
                         except:
                             flash('Error: Removing old file failed.')
-                    flash('Success: File uploaded for platform {} with version {}.'.format(platform.name, __ver))
+                    flash('Success: File uploaded for platform {} with version {}.'.format(platform.name, __ver), 'success')
                     return redirect(url_for('main.whitelist'))
                 else:
                     flash('Error: Version must increase. File not uploaded.')
