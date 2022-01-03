@@ -265,7 +265,7 @@ def upload_post():
                     # Only delete old file after db is updated; so the old file will not be deleted 
                     if old_file and current_app.config['DELETE_OLD_FILES']:
                         try:
-                            os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], old_file))
+                            os.remove(os.path.join(os.path.dirname(__file__),current_app.config['UPLOAD_FOLDER'], old_file))
                         except:
                             flash('Error: Removing old file failed.')
                     flash('Success: File uploaded for platform {} with version {}.'.format(platform.name, __ver))
