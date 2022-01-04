@@ -83,7 +83,7 @@ def create_post():
 
     notes = request.form.get("notes")
     # Create a new platform using this information
-    new_platform = Platform(name=platform_name, notes=notes)
+    new_platform = Platform(name=platform_name.lower(), notes=notes) # make sure the platform is lowercase
     # add the new user to the database
     db.session.add(new_platform)
     db.session.commit()

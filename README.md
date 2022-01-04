@@ -21,8 +21,8 @@ You need to create a new admin-user to be able to access it. This can be done by
 
 Linux:
 ```
-ENV ADMIN_EMAIL=desired_login_email@yahoo.com
-ENV ADMIN_PASSWORD=verysecurepassword
+export ADMIN_EMAIL=desired_login_email@yahoo.com
+export ADMIN_PASSWORD=verysecurepassword
 ```
 Windows:
 ```
@@ -40,8 +40,8 @@ To run the server directly from sourcecode start it with the following command:
 
 ```
 python -m pip install -r requirements.txt  # To install the required dependencies
-ENV FLASK_APP=server
-ENV FLASK_ENV=development
+export FLASK_APP=server
+export FLASK_ENV=development
 python3 -m flask run --host=0.0.0.0 
 ```
 
