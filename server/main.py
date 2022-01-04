@@ -155,7 +155,8 @@ def whitelist_post():
                     return render_template("whitelist.html", platforms=platforms, unbound_devices=unbound_devices)
                 if known_device and known_platform: # if the device and platform are known, whitelist the device
                     known_device.type = known_platform.id
-                    known_device.notes = request.form.get('notes')
+                    if request.form.get('notes') and request.form.get('notes') != '': # Make sure we do not overwrite existing notes
+                        known_device.notes = request.form.get('notes')
                     db.session.commit()
                     flash('Success: {} added to platform {}'.format(known_device.mac, known_platform.name),'warning')
                 else:
