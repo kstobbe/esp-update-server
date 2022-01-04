@@ -26,7 +26,7 @@
             <option value="--">--</option>
             {% if platforms %}
             {% for platform in platforms %}
-            <option value="{{ platform.name }}">{{ platform.name }}</option>
+            <option value="{{ platform.name.title() }}">{{ platform.name }}</option>
             {% endfor %}
             {% endif %}
           </select>
@@ -40,7 +40,7 @@
 {% for platform in platforms %}
 <section class="box">
   <div class="box">
-    <h2 class="title has-text-grey-darker">{{ platform.name }}</h2>
+    <h2 class="title has-text-grey-darker">{{ platform.name.title() }}</h2>
     <b>Notes: </b>
     {{platform.notes}}
     <form class="icon is-medium" name="notes" action="{{ url_for('main.whitelist') }}"
@@ -113,7 +113,7 @@
     </div>
     {% else %}
     <div class="notification is-warning">
-      No devices for platform {{ platform.name }}
+      No devices for platform {{ platform.name.title() }}
     </div>
     {% endif %}
   </div>
