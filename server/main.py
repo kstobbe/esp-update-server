@@ -121,7 +121,7 @@ def whitelist_post():
             flash("Deleted device from platform",'warning')
 
     # Edit notes
-    if request.form.get('_method') and 'NOTES' in request.form.get('_method'):
+    elif request.form.get('_method') and 'NOTES' in request.form.get('_method'):
         if request.form['_device']:
             device_id = request.form.get('_device',type=int)
             device = Device.query.filter_by(id=device_id).first()
