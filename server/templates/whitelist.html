@@ -79,8 +79,8 @@
             <td>{{ format_mac(device.mac.upper()) }}</td>
             <td><span class="tag is-success">{{device.version}}</span></td>
             <td>{{device.IP}}</td>
-            <td>{{ moment(device.first_seen).format('DD-MM-YYYY HH:mm') }}</td>
-            <td>{{ moment(device.last_seen).format('DD-MM-YYYY HH:mm') }} ({{ moment(device.last_seen).fromNow()}})</td>
+            <td>{% if device.first_seen %}{{ moment(device.first_seen).format('DD-MM-YYYY HH:mm') }}{% else %}Never{% endif %}</td>
+            <td>{% if device.last_seen %}{{ moment(device.last_seen).format('DD-MM-YYYY HH:mm') }} ({{ moment(device.last_seen).fromNow()}}){% else %}Never{% endif %}</td>
             <td>{{device.notes}}</td>
             <td class="bd-icon-size">
               <span class="icon is-medium">
@@ -161,8 +161,8 @@
               <td><span class="tag is-success">{{device.version}}</span></td>
               <td>{{device.requested_platform}}</td>
               <td>{{device.IP}}</td>
-              <td>{{ moment(device.first_seen).format('DD-MM-YYYY HH:mm') }}</td>
-              <td>{{ moment(device.last_seen).format('DD-MM-YYYY HH:mm') }} ({{ moment(device.last_seen).fromNow()}})
+              <td>{% if device.first_seen %}{{ moment(device.first_seen).format('DD-MM-YYYY HH:mm') }}{% else %}Never{% endif %}</td>
+              <td>{% if device.last_seen %}{{ moment(device.last_seen).format('DD-MM-YYYY HH:mm') }} ({{ moment(device.last_seen).fromNow()}}){% else %}Never{% endif %}</td>
               </td>
               <td>{{device.notes}}</td>
               <td class="bd-icon-size">
