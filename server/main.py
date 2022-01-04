@@ -197,6 +197,8 @@ def update():
             device.version = str(__ver)
             device.requested_platform = __dev
             device.IP = request.remote_addr
+            if device.first_seen is None: # If the device was manually added, first_seen will be None
+                device.first_seen = datetime.utcnow()
         else:
             device = Device(mac=__mac, version=str(__ver), requested_platform=__dev, IP=request.remote_addr)
             # add the new device to the database
