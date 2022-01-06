@@ -26,7 +26,7 @@
             <option value="--">--</option>
             {% if platforms %}
             {% for platform in platforms %}
-            <option value="{{ platform.name.title() }}">{{ platform.name }}</option>
+            <option value="{{ platform.name }}">{{ platform.name.title() }}</option>
             {% endfor %}
             {% endif %}
           </select>

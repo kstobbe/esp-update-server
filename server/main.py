@@ -142,7 +142,7 @@ def whitelist_post():
                         flash('Error: Address already on a whitelist.')
                         return render_template("whitelist.html", platforms=platforms, unbound_devices=unbound_devices)
                 # All looks good - add to whitelist.
-                known_platform = Platform.query.filter_by(name=request.form['device']).first()
+                known_platform = Platform.query.filter_by(name=request.form['device'].lower()).first()
                 if not known_device and known_platform: # device was not known before, but platform is valid
                     device = Device(mac=__mac, type=known_platform.id, notes=request.form.get('notes'))
                     # add the new device to the database
@@ -188,7 +188,7 @@ def update():
     __ver = version.parse(request.args.get("ver", default=None))  # parse version, brings a bit extra safety
     platform_valid = re.match("^[a-zA-Z0-9\-]*$", __dev) # Check if the platform contains only valid characters
     if not platform_valid:
-        log_event("ERROR: Invalid parameters.")
+        log_event("ERROR: Invalid platform name: {}".format(__dev))
         return "Error: Invalid parameters.", 400
     if __dev and __mac and __ver and len(__mac) == 12 :
         # If we know this device already
@@ -218,7 +218,8 @@ def update():
                     log_event("ERROR: No update available.")
                     return "No update available.", 400
                 if __ver < version.parse(platform.version):
-                    if os.path.isfile(os.path.join(os.path.dirname(__file__), current_app.config['UPLOAD_FOLDER'], platform.file)):
+                    path = os.path.join(os.path.dirname(__file__), current_app.config['UPLOAD_FOLDER'], platform.file)
+                    if os.path.isfile(path):
                         platform.downloads += 1
                         db.session.commit()
                         response = make_response(
@@ -231,6 +232,9 @@ def update():
                         ))
                         response.headers['x-MD5'] = get_MD5(platform.file)
                         return response
+                    else:
+                        log_event("ERROR: Unknown file: {}".format(path))
+                        return "Error: Internal error", 500
                 else:
                     log_event("INFO: No update needed.")
                     return "No update needed.", 304
@@ -240,8 +244,9 @@ def update():
         else:
             log_event("ERROR: Unkown platform")
             return "Error: Unkown platform", 500
-    log_event("ERROR: Invalid parameters.")
-    return "Error: Invalid parameters.", 400
+    else:
+        log_event("ERROR: Invalid parameters. __dev: {} and __mac: {} and __ver:{} and len(__mac): {} ".format(__dev,__mac, __ver, len(__mac)))
+        return "Error: Invalid parameters.", 400
 
 
 @main.route("/upload")
