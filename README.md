@@ -51,7 +51,7 @@ Ready-made Docker images are available on [Docker Hub](https://hub.docker.com/r/
 
 To run the server in a Docker container create a directory `bin` where you want to store the database and binaries. Then run following command from the directory where you have the `bin`-directory.  
 ```
-docker run -d --restart unless-stopped --name esp-update-server -v $PWD/bin:/esp-update-server/bin -p 5000:5000 marcovannoord/esp-update-server:latest
+docker run -d --restart unless-stopped --name esp-update-server -v $PWD/bin:/server/bin -p 5000:5000 marcovannoord/esp-update-server:latest
 ```
 Using the `-v` option ensures files are stored outside the Docker container and are thus persisted even if the container is terminated.
 
@@ -63,7 +63,7 @@ docker build -t esp-update-server:latest .
 to re-build the docker-image from source
 To directly run this app, run
 ```
-docker run -d --restart unless-stopped --name esp-update-server -v $PWD/bin:/esp-update-server/bin -p 5000:5000 esp-update-server:latest
+docker run -d --restart unless-stopped --name esp-update-server -v $PWD/bin:/server/bin -p 5000:5000 esp-update-server:latest
 ```
 
 ### Device and platform management

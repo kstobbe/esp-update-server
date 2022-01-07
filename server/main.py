@@ -231,6 +231,7 @@ def update():
                             attachment_filename=platform.file,
                         ))
                         response.headers['x-MD5'] = get_MD5(platform.file)
+                        log_event("INFO: Updating {} of type {} from {} to {} ".format(__mac, platform.name, __ver, platform.version))
                         return response
                     else:
                         log_event("ERROR: Unknown file: {}".format(path))
