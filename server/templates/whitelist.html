@@ -22,7 +22,7 @@
         <dt>Notes:
         <dd><textarea name="notes"></textarea>
         <dt>Platform:
-        <dd><select name="device" class="dropdown">
+        <dd><select name="device" id="device" class="dropdown">
             <option value="--">--</option>
             {% if platforms %}
             {% for platform in platforms %}
@@ -123,9 +123,12 @@
 <li><em>No platforms created.</em>
   {% endif %}
   {% endwith %}
-  <script> function fillMac(mac) {
+  <script> function setAddValues(mac, platform) {
       document.getElementById("macaddr").value = mac;
       document.getElementById("macaddr").scrollIntoView();
+      if (platform !== "" && platform && platform!== "None"){
+        document.getElementById("device").value = platform.toLowerCase();
+      }
     }
   </script>
   {% with devices = unbound_devices %}
@@ -179,7 +182,7 @@
               </td>
               <td class="bd-icon-size">
                 <span class="icon is-medium">
-                  <i class="btn btn-link" onclick="fillMac('{{format_mac(device.mac.upper())}}')"><img
+                  <i class="btn btn-link" onclick="setAddValues('{{format_mac(device.mac.upper())}}','{{device.requested_platform}}')"><img
                       src="{{ url_for('static', filename='plus-box.svg') }}"></i>
                 </span>
               </td>
