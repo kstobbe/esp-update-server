@@ -77,7 +77,7 @@ def create_post():
         flash('Error: Platform name contains illegal characters. Only a-Z, 0-9 and - are allowed')
         return redirect(url_for("main.create"))
 
-    platform = Platform.query.filter_by(name=platform_name).first()  # if this returns a result, then the platform already exists in database
+    platform = Platform.query.filter_by(name=platform_name.lower()).first()  # if this returns a result, then the platform already exists in database
     if platform:
         flash("Platform already exists")
         return redirect(url_for("main.create"))
