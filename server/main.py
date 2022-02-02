@@ -9,6 +9,7 @@ from flask import (
     flash,
     send_from_directory,
     current_app,
+    session
 )
 from flask.helpers import make_response
 from flask_login import login_required, current_user
@@ -306,6 +307,42 @@ def upload_post():
     else:
         flash('Error: File type not allowed.')
         return redirect(request.url)
+
+
+@main.route('/users', methods=['POST'])
+@login_required
+def users_post():
+    # Toggle admin-rights
+    if request.form.get('_method') and 'TOGGLE' in request.form.get('_method'):
+        if request.form['_user']:
+            user_id = request.form.get('_user',type=int)
+            if int(session["_user_id"]) is user_id: # do not allow user to edit self(prevents locking yourself out)
+                flash("Cannot edit self")
+                return redirect(request.url)
+            user = User.query.filter_by(id=user_id).first()
+            if request.form.get('_status') and 'on' in request.form.get('_status'):
+                    user.admin = True
+            else: # checkboxes are not POST-ed when false, so assume it's unchecked if missing
+                user.admin = False
+                db.session.commit()
+                flash("Successfully toggled Admin-status for user {}".format(user.name))
+
+    # Delete user. FIXME: not implemented yet
+    elif request.form.get('_method') and 'DELETE' in request.form.get('_method'):
+        if request.form['_user']:
+            device_id = request.form.get('_device',type=int)
+            device = Device.query.filter_by(id=device_id).first()
+            device.notes = request.form.get('_notes') # update the note
+            db.session.commit()
+            flash("Updated note",'warning')
+    return redirect(request.url)
+
+@main.route("/users")
+@login_required
+def users():
+    users = User.query.all()
+    return render_template("users.html", users=users)
+
 
 def get_MD5(filename):
     path = os.path.join(os.path.dirname(__file__), current_app.config['UPLOAD_FOLDER'], filename)
