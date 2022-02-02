@@ -32,14 +32,24 @@
           <tr>
             <td>{{ user.name }}</td>
             <td>{{user.email}}</td>
-            <td>{{user.admin}}</td>
             <td>
               <form name="toggle" action="{{ url_for('main.users') }}" id="toggleUser{{user.id}}" method="POST">
                 <input type="hidden" name="_method" value="TOGGLE">
                 <input type="hidden" name="_user" value="{{user.id}}">
                 <input type="checkbox" name="_status", class="btn btn-link" {% if user.admin == true %} checked {% endif %}
-                onclick="if (!confirm('Are you sure you want to make {{ user.name }} {% if user.admin == true %} Non-{% endif %} Admin ?')) { return false }$('#toggleUser{{user.id}}').submit();"></i>
+                onclick="if (!confirm('Are you sure you want to make {{ user.name }} a {% if user.admin == true %}Non-{% endif %} admin ?')) { return false }$('#toggleUser{{user.id}}').submit();"></i>
               </form>
+            </td>
+            <td class="bd-icon-size">
+              <span class="icon is-medium">
+                <form name="delete" action="{{ url_for('main.users') }}" id="deleteform{{user.id}}" method="POST">
+                  <input type="hidden" name="_method" value="DELETE">
+                  <input type="hidden" name="_user" value="{{user.id}}">
+                  <i type="submit" class="btn btn-link"
+                    onclick="if (!confirm('Are you sure you want to delete {{ user.name }}? This cannot be undone!')) { return false }$('#deleteform{{user.id}}').submit();"><img
+                      src="{{ url_for('static', filename='trash-can-outline.svg') }}"></i>
+                </form>
+              </span>
             </td>
             
           </tr>

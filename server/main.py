@@ -324,17 +324,20 @@ def users_post():
                     user.admin = True
             else: # checkboxes are not POST-ed when false, so assume it's unchecked if missing
                 user.admin = False
-                db.session.commit()
-                flash("Successfully toggled Admin-status for user {}".format(user.name))
+            db.session.commit()
+            flash("Successfully toggled Admin-status for user {}".format(user.name))
 
     # Delete user. FIXME: not implemented yet
     elif request.form.get('_method') and 'DELETE' in request.form.get('_method'):
-        if request.form['_user']:
-            device_id = request.form.get('_device',type=int)
-            device = Device.query.filter_by(id=device_id).first()
-            device.notes = request.form.get('_notes') # update the note
+         if request.form['_user']:
+            user_id = request.form.get('_user',type=int)
+            if int(session["_user_id"]) is user_id: # do not allow user to edit self(prevents locking yourself out)
+                flash("Cannot delete self")
+                return redirect(request.url)
+            user = User.query.filter_by(id=user_id).first()
+            db.session.delete(user)
             db.session.commit()
-            flash("Updated note",'warning')
+            flash("Successfully deleted user {}".format(user.name))
     return redirect(request.url)
 
 @main.route("/users")
