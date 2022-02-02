@@ -65,7 +65,7 @@
                 {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                 {% for category, message in messages %}
-                <div class="notification is-{% if category is defined and category is sameas 'message' %}danger{% else %}{{category}}{% endif %}">
+                <div class="notification is-{% if category is defined and category == 'message' %}danger{% else %}{{category}}{% endif %}">
                     {{message}}
                     </div>
                 {% endfor %}
