@@ -117,18 +117,29 @@ def whitelist_post():
         if request.form['_device']:
             device_id = request.form.get('_device',type=int)
             device = Device.query.filter_by(id=device_id).first()
-            device.type = None # Set the type to None, instead of deleting the device completely
-            db.session.commit()
-            flash("Deleted device from platform",'warning')
+            if device:
+                device.type = None # Set the type to None, instead of deleting the device completely
+                db.session.commit()
+                flash("Deleted device from platform",'warning')
 
     # Edit notes
     elif request.form.get('_method') and 'NOTES' in request.form.get('_method'):
         if request.form['_device']:
             device_id = request.form.get('_device',type=int)
             device = Device.query.filter_by(id=device_id).first()
-            device.notes = request.form.get('_notes') # update the note
-            db.session.commit()
-            flash("Updated note",'warning')
+            if device:
+                device.notes = request.form.get('_notes') # update the note
+                db.session.commit()
+                flash("Updated note",'warning')
+
+    if request.form.get('_method') and 'FORGET' in request.form.get('_method'):
+        if request.form['_device']:
+            device_id = request.form.get('_device',type=int)
+            device = Device.query.filter_by(id=device_id).first()
+            if device:
+                db.session.delete(device)
+                db.session.commit()
+                flash("Forgot about device {}".format(device.mac),'warning')
 
     elif request.form.get('action') and 'ADD' in request.form.get('action'):
         # Ensure valid data.

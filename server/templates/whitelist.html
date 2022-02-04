@@ -156,6 +156,7 @@
               <th>Notes</th>
               <th>Edit</th>
               <th>Add</th>
+              <th>Forget</th>
             </tr>
           </thead>
           <tbody>
@@ -187,7 +188,17 @@
                       src="{{ url_for('static', filename='plus-box.svg') }}"></i>
                 </span>
               </td>
-              <td></td>
+              <td class="bd-icon-size">
+                <span class="icon is-medium">
+                  <form name="delete" action="{{ url_for('main.whitelist') }}" id="forgetform{{device.id}}" method="POST">
+                    <input type="hidden" name="_method" value="FORGET">
+                    <input type="hidden" name="_device" value="{{device.id}}">
+                    <i type="submit" class="btn btn-link"
+                      onclick="if (!confirm('Are you sure you want to forget this device ( {{device.id}} / {{device.requested_platform}} ) ? This cannot be undone! ?')) { return false }$('#forgetform{{device.id}}').submit();"><img
+                        src="{{ url_for('static', filename='trash-can-outline.svg') }}"></i>
+                  </form>
+                </span>
+              </td>
             </tr>
 
             {% endfor %}
