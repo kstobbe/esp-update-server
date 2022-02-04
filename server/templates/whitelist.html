@@ -194,7 +194,7 @@
                     <input type="hidden" name="_method" value="FORGET">
                     <input type="hidden" name="_device" value="{{device.id}}">
                     <i type="submit" class="btn btn-link"
-                      onclick="if (!confirm('Are you sure you want to forget this device ( {{device.id}} / {{device.requested_platform}} ) ? This cannot be undone! ?')) { return false }$('#forgetform{{device.id}}').submit();"><img
+                      onclick="if (!confirm('Are you sure you want to completely forget this device ( {{ format_mac(device.mac.upper()) }} / {{device.requested_platform}} ) ? This cannot be undone!')) { return false }$('#forgetform{{device.id}}').submit();"><img
                         src="{{ url_for('static', filename='trash-can-outline.svg') }}"></i>
                   </form>
                 </span>
