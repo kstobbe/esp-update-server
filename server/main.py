@@ -172,9 +172,7 @@ def whitelist_post():
 
 @main.route("/update", methods=["GET"])
 def update():
-    __error = 400
     __dev = request.args.get("dev", default=None)  # get requested device version
-
     if "X_ESP8266_STA_MAC" in request.headers:
         __mac = request.headers["X_ESP8266_STA_MAC"]
         __mac = str(re.sub(r"[^0-9A-fa-f]+", "", __mac.lower()))
@@ -194,15 +192,17 @@ def update():
     if __dev and __mac and __ver and len(__mac) == 12 :
         # If we know this device already
         device = Device.query.filter_by(mac=__mac).first()
+        # get ip address, either if forwarded by proxy or directly
+        remote_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
         if device:
             device.last_seen = datetime.utcnow()
             device.version = str(__ver)
             device.requested_platform = __dev
-            device.IP = request.remote_addr
+            device.IP = remote_ip
             if device.first_seen is None: # If the device was manually added, first_seen will be None
                 device.first_seen = datetime.utcnow()
         else:
-            device = Device(mac=__mac, version=str(__ver), requested_platform=__dev, IP=request.remote_addr)
+            device = Device(mac=__mac, version=str(__ver), requested_platform=__dev, IP=remote_ip)
             # add the new device to the database
             db.session.add(device)
         db.session.commit()
