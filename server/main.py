@@ -132,7 +132,7 @@ def whitelist_post():
                 db.session.commit()
                 flash("Updated note",'warning')
 
-    if request.form.get('_method') and 'FORGET' in request.form.get('_method'):
+    elif request.form.get('_method') and 'FORGET' in request.form.get('_method'):
         if request.form['_device']:
             device_id = request.form.get('_device',type=int)
             device = Device.query.filter_by(id=device_id).first()
