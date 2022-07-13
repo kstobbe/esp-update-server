@@ -1,0 +1,26 @@
+<!-- templates/create.html -->
+
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+  <h3 class="title">Add platform</h3>
+  <div class="box">
+    <form method="POST" action="">
+      <div class="field">
+        <div class="control">
+          <input class="input is-large" type="text" name="name" size=50 placeholder="Platform name here" autofocus="">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="control">
+          <input class="input is-large" type="text" name="notes" placeholder="Notes about this platform here" autofocus="">
+        </div>
+      </div>
+
+      <button class="button is-block is-info is-large is-fullwidth">Add platform</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+<!-- templates/signup.html -->
+
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <h2 class="title">Upload Platform Image</h2>
+    <p>Upload a new binary. The version and platform will be automatically extracted</p>
+        <form action="{{ url_for('main.upload_post') }}" method="POST" enctype=multipart/form-data>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type=file name=file>
+                </div>
+            </div>
+            <button class="button is-block is-info is-large is-fullwidth">Upload</button>
+        </form>
+    
+{% endblock %}

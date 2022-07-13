@@ -13,42 +13,71 @@ The main feature are:
 - **Platform Names**: Each platform supported must be created on the web interface before a binary is uploaded. If an existing _platform name_ is not found in an uploaded binary it is rejected. Multiple devices can share the same _platform name_ and thus receive the same binary. Individual devices are controlled through _whitelists_ described below.
 - **Semantic Versioning**: Updates are only done if a newer version of a binary is available compared to the version the device is already running. Semantic versioning is assumed e.g. v1.0.2. The uploaded binary must contain a version number starting with _v_ and three version number components i.e MAJOR, MINOR, PATCH - _v1.0.2_. An uploaded binary is rejected if such a version number is not found in the binary or if the version number is not increased compared to the one already known. 
 - **Whitelists**: Download control is enforced by MAC Address whitelists. On the web interface WiFi MAC Addresses can be added and removed to created platforms. Only whitelisted devices will be allowed to update.
-- **Binary Upload**: Uploading binaries is simple and administration is kept to a minimum by automatic detection of _platform name_ and _version number_.
+- **Binary Upload**: Uploading binaries is simple and administration is kept to a minimum by automatic detection of _platform name_ and _version number_. This detection helps prevent mistakes where the OTA update routine is not called or you forgot to enter a valid platform name.
 
 ## How Do I Use It?
 
-The server is _intended_ to run on internal network where it cannot be accessed from the internet. As such it does not offer any security mechanisms.
+You need to create a new admin-user to be able to access it. This can be done by running setting environment variables before running the server. You only need to do this once. If the user already exists (eg: the user used the registration form) it will be promoted to an admin-user
 
-### Start Server From Code
-
-To run the server directly from code start it with the following command:
-
+Linux:
 ```
-python3 server.py
+export ADMIN_EMAIL=desired_login_email@yahoo.com
+export ADMIN_PASSWORD=verysecurepassword
 ```
-
-### Start Server From Docker?
-
-Ready-made Docker images are available on [Docker Hub](https://hub.docker.com/r/kstobbe/esp-update-server/) which support running on Linux on both AMD64 and ARM32V6 architectures - i.e. desktops, laptops, and Raspberry Pis.
-
-To run the server in a Docker container create a directory for storing binaries. Go inside this directory and execute the following command:
-
+Windows:
 ```
-docker run -d -v $PWD:/esp-update-server/bin -p 5000:5000 kstobbe/esp-update-server:latest
+SET ADMIN_EMAIL=desired_login_email@yahoo.com
+SET ADMIN_PASSWORD=verysecurepassword
+```
+Docker:
+```
+docker run  --restart unless-stopped -dt --name esp-update-server -v $PWD/bin:/server/bin --env ADMIN_EMAIL=desired_login_email@yahoo.com --env ADMIN_PASSWORD=verysecurepassword -p 5000:5000/tcp marcovannoord/esp-update-server:latest
 ```
 
+### Start server from source
+
+To run the server directly from sourcecode start it with the following command:
+
+```
+python -m pip install -r requirements.txt  # To install the required dependencies
+export FLASK_APP=server
+export FLASK_ENV=development
+python3 -m flask run --host=0.0.0.0 
+```
+
+### Running with Docker
+
+Ready-made Docker images are available on [Docker Hub](https://hub.docker.com/r/marcovannoord/esp-update-server/)
+
+To run the server in a Docker container create a directory `bin` where you want to store the database and binaries. Then run following command from the directory where you have the `bin`-directory.  
+```
+docker run -dt --restart unless-stopped --name esp-update-server -v $PWD/bin:/server/bin -p 5000:5000 marcovannoord/esp-update-server:latest
+```
 Using the `-v` option ensures files are stored outside the Docker container and are thus persisted even if the container is terminated.
 
-### Access Server For Management
+### Build docker file yourself
+From the root-directory of this app, run: 
+```
+docker build -t esp-update-server:latest . 
+``` 
+to re-build the docker-image from source
+To directly run this app, run
+```
+docker run -dt --restart unless-stopped --name esp-update-server -v $PWD/bin:/server/bin -p 5000:5000 esp-update-server:latest
+```
 
-In a web browser, when the server is running, enter the IP address of the machine running the server and port 5000, e.g. `http://192.168.0.10:5000`. Now platforms can be created and deleted. Whitelists can be managed and binaries uploaded.
+### Device and platform management
+
+In a web browser, when the server is running, enter the IP address of the machine running the server and port 5000, e.g. `http://192.168.0.10:5000`. Now platforms can be created Devices can be added to platforms and binaries uploaded.  
+**Whitelisting devices, and assigning them to a platform**  
+![alt text](img/whitelist.png "Whitelist page")  
 
 ### Access Server For Update
 
-Devices requesting download of a binary file for upgrade must access path `update` and include _device name_ and current _version number_ in a query like below - substitute the IP address with your own.
+ESP32 and ESP8266 devices requesting download of a binary file for upgrade must access path `update` and include _device name_ and current _version number_ in a query like below - substitute the IP address with your own.
 
 ```
-http://192.168.0.10:5000/update?ver=v1.0.2&dev=chase
+http://192.168.0.10:5000/update?dev=smart-lamp&ver=v1.0.2
 ```
 
 The server will respond with _HTTP Error Code_:
@@ -58,24 +87,22 @@ The server will respond with _HTTP Error Code_:
 
 ### ESP32 Implementation
 
-Below if an implementation for _ESP32_ that works with the server. Remember to change the IP address in the code to match your own.
+Below if an implementation for _ESP32_ that works with the server. Remember to change the IP address in the code to match your own. You can find a slightly more elaborate example in the `/examples` directory
 
 ```
 #include <HTTPClient.h>
 #include <HTTPUpdate.h>
 #include <WiFi.h>
 
-#define VERSION "v1.0.2"
-#define HOST "Chase"
+#define FW_VERSION "v1.0.2" # define your firmware-version here. You NEED to increase this every time
+#define DEVICE_PLATFORM "SMART-LAMP" # make sure you do not change this name once chosen. It may not contain an underscore
 
-const char* urlBase = "http://192.168.0.10:5000/update";
+const char* ota_update_server = "http://192.168.0.10:5000/";
 
 /***************************************************/
 void checkForUpdates(void)
 {
-  String checkUrl = String( urlBase);
-  checkUrl.concat( "?ver=" + String(VERSION) );
-  checkUrl.concat( "&dev=" + String(HOST) );
+  String checkUrl = String( ota_update_server) + String("update?dev=" DEVICE_PLATFORM "&ver=" FW_VERSION );
 
   Serial.println("INFO: Checking for updates at URL: " + String( checkUrl ) );
 
@@ -106,17 +133,15 @@ For _ESP8266_ the implementation is very similar with a few changes. Remember to
 #include <ESP8266httpUpdate.h>
 #include <ESP8266WiFi.h>
 
-#define VERSION "v1.0.2"
-#define HOST "Chase"
+#define FW_VERSION "v1.0.2
+#define DEVICE_PLATFORM "SMART_LAMP"
 
-const char* urlBase = "http://192.168.0.10:5000/update";
+const char* ota_update_server = "http://192.168.0.10:5000/";
 
 /***************************************************/
 void checkForUpdates(void)
 {
-  String checkUrl = String( urlBase);
-  checkUrl.concat( "?ver=" + String(VERSION) );
-  checkUrl.concat( "&dev=" + String(HOST) );
+  String checkUrl = String( ota_update_server) + String("update?dev=" DEVICE_PLATFORM "&ver=" FW_VERSION );
 
   Serial.println("INFO: Checking for updates at URL: " + String( checkUrl ) );
   
@@ -136,6 +161,13 @@ void checkForUpdates(void)
     }
 }
 ```
+
+## TODO
+- [ ] Usermanager
+- [ ] Ability to delete platforms
+- [ ] Better input handling/checking
+- [ ] Getting it production-ready and safe
+- [ ] Make compatible with AutoConnect
 
 ## Legal
 

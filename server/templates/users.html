@@ -1,0 +1,64 @@
+<!-- templates/status.html -->
+
+{% extends "layout.html" %}
+
+{% block content %}
+<h1 class="title">
+  Users
+</h1>
+<h2 class="subtitle">
+  Easy system to manage OTA updates for Espressif-based devices
+</h2>
+
+
+<section class="box">
+  <div class="box">
+    <h2 class="title has-text-grey-darker">Users</h2>
+  </div>
+  <div class="card">
+    <div class="columns is-centered">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Admin</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if users %}
+          {% for user in users %}
+          <tr>
+            <td>{{ user.name }}</td>
+            <td>{{user.email}}</td>
+            <td >
+              <form class="field" name="toggle" action="{{ url_for('main.users') }}" id="toggleUser{{user.id}}" method="POST">
+                <input type="hidden" name="_method" value="TOGGLE">
+                <input type="hidden" name="_user" value="{{user.id}}">
+                <input type="checkbox" class="switch is-small" id="togglebtnUsr{{user.id}}" name="_status"  {% if session['_user_id'] | int == user.id %} disabled {% endif %} {% if user.admin == true %} checked {% endif %}
+                  onclick="if (!confirm('Are you sure you want to {% if user.admin == true %}revoke admin-privileges from{% else %}allow Admin-privileges to{% endif %} {{ user.name }} ?')) { return false }$('#toggleUser{{user.id}}').submit();">
+                <label for="togglebtnUsr{{user.id}}" ></label>
+                </form>
+            </td>
+            <td class="bd-icon-size">
+              <span class="icon is-medium">
+                <form name="delete" action="{{ url_for('main.users') }}" id="deleteform{{user.id}}" method="POST">
+                  <input type="hidden" name="_method" value="DELETE">
+                  <input type="hidden" name="_user" value="{{user.id}}">
+                  <i type="submit" class="btn btn-link"
+                    onclick="if (!confirm('Are you sure you want to delete {{ user.name }}? This cannot be undone!')) { return false }$('#deleteform{{user.id}}').submit();"><img
+                      src="{{ url_for('static', filename='trash-can-outline.svg') }}"></i>
+                </form>
+              </span>
+            </td>
+            
+          </tr>
+          {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}
